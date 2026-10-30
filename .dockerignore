@@ -1,0 +1,15 @@
+# Docker Ignore
+**/node_modules
+**/dist
+**/build
+**/.git
+**/.github
+**/.pytest_cache
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.venv
+**/venv
+**/.env
+**/.DS_Store

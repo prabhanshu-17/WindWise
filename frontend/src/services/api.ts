@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {
+import type {
   OverviewData,
   ForecastExplorerData,
   AccuracyAnalysisData,
@@ -9,8 +9,21 @@ import {
   ForecastRecord
 } from '../types';
 
+export const getBaseUrl = (): string => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return '/api';
+    }
+  }
+  return 'https://backend-ten-mauve-27.vercel.app/api';
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL: getBaseUrl(),
   timeout: 30000,
 });
 
@@ -78,11 +91,10 @@ export const triggerSync = async (): Promise<{ status: string; message: string }
 };
 
 export const getExportUrl = (dataset: string = 'accuracy', month: string = '2026-01', cutoff?: string): string => {
-  const base = import.meta.env.VITE_API_BASE_URL || '/api';
+  const base = getBaseUrl();
   let url = `${base}/export?dataset=${dataset}&month=${month}`;
   if (cutoff) url += `&cutoff=${encodeURIComponent(cutoff)}`;
   return url;
 };
 
 export default api;
-

@@ -126,3 +126,4 @@ export const Sidebar: React.FC<SidebarProps> = ({ dataSourceStatus = 'Connected'
     </aside>
   );
 };
+

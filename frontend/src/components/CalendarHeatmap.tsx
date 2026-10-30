@@ -89,3 +89,4 @@ export const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({
     </div>
   );
 };
+

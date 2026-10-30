@@ -95,3 +95,4 @@ export const BiasGauge: React.FC<BiasGaugeProps> = ({ bias }) => {
     </div>
   );
 };
+

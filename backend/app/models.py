@@ -159,3 +159,4 @@ class DataQualityResponse(BaseModel):
     dateRangeActuals: Dict[str, Optional[str]]
     dateRangeForecasts: Dict[str, Optional[str]]
     tableSummaries: Dict[str, Any]
+

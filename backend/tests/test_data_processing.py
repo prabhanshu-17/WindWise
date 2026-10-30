@@ -134,3 +134,4 @@ def test_record_validation():
     assert validate_record({"startTime": "2026-01-01T00:00:00Z", "fuelType": "COAL", "generation": 500.0}, "FUELHH") is False
     assert validate_record({"startTime": "2026-01-01T00:00:00Z", "fuelType": "WIND", "generation": -10.0}, "FUELHH") is False
     assert validate_record({"startTime": "invalid", "fuelType": "WIND", "generation": 500.0}, "FUELHH") is False
+

@@ -186,3 +186,4 @@ def get_all_sync_metadata() -> Dict[str, str]:
         return {row["key"]: row["value"] for row in cursor.fetchall()}
     finally:
         conn.close()
+

@@ -46,3 +46,4 @@ def trigger_sync(background_tasks: BackgroundTasks):
     except Exception as e:
         logger.error("Failed to trigger sync: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
+

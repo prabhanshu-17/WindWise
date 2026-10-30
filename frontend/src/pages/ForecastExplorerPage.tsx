@@ -475,3 +475,4 @@ export const ForecastExplorerPage: React.FC = () => {
     </div>
   );
 };
+

@@ -25,3 +25,4 @@ EXPECTED_JANUARY_HOURS = 31 * 24       # 744 hourly intervals
 
 # CORS Configuration
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000,*").split(",")
+

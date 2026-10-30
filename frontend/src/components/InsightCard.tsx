@@ -55,3 +55,4 @@ export const InsightCard: React.FC<InsightCardProps> = ({ insight }) => {
     </div>
   );
 };
+

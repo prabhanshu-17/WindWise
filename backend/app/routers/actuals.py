@@ -16,3 +16,4 @@ def get_actuals(
     except Exception as e:
         logger.error("Error retrieving actuals: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
+

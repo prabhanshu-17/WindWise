@@ -144,3 +144,4 @@ def sync_elexon_january_2026() -> Dict[str, Any]:
             "duplicates": total_forecast_duplicates
         }
     }
+

@@ -36,3 +36,4 @@ MOCK_WINDFOR_RECORDS = [
     # Interval 04:00: Forecast only (no matching actual)
     {"dataset": "WINDFOR", "publishTime": "2025-12-31T10:00:00Z", "startTime": "2026-01-01T04:00:00Z", "generation": 6000.0},
 ]
+

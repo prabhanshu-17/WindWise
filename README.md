@@ -484,3 +484,4 @@ In compliance with project specifications:
 In accordance with Section 18 instructions:
 - **AI Model:** Developed with assistance from Gemini 3.8 Flash (High) via Antigravity.
 - **Scope of AI Assistance:** Architecture design, full-stack implementation (FastAPI and React/TypeScript), mathematical verification of metric formulas, automated unit test development, and documentation generation. All calculations, database queries, and data integrations are validated against live Elexon BMRS API data.
+

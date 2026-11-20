@@ -7,34 +7,35 @@
     scroll-behavior: smooth;
   }
   body {
-    background-color: #0B1120;
+    background-color: #080B11;
     color: #F8FAFC;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     overflow-x: hidden;
     min-height: 100vh;
+    letter-spacing: -0.011em;
   }
 }
 
-/* Custom scrollbar for enterprise analytics feel */
+/* Custom scrollbar for institutional analytics workstation */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0B1120;
+  background: #080B11;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #263449;
-  border-radius: 3px;
+  background: #1E2638;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #38BDF8;
+  background: #2A364E;
 }
 
-/* Hide scrollbar utility for clean mobile horizontal carousels/tables */
+/* Clean utility for horizontal scroll carousels without scrollbar clutter */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -43,11 +44,11 @@
   scrollbar-width: none;
 }
 
-/* Keyframes for subtle entrance animation */
+/* Subtle entrance fade */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(3px);
   }
   to {
     opacity: 1;
@@ -56,21 +57,25 @@
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.25s ease-out forwards;
+  animation: fadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Clean tooltip styling for Recharts */
+/* Institutional Recharts Tooltip styling */
 .recharts-default-tooltip {
-  background-color: #151F30 !important;
-  border: 1px solid #263449 !important;
+  background-color: #111620 !important;
+  border: 1px solid #1E2638 !important;
   border-radius: 8px !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
   color: #F8FAFC !important;
-  font-size: 12px !important;
+  font-size: 11px !important;
+  padding: 8px 12px !important;
 }
 
 .recharts-tooltip-label {
   color: #94A3B8 !important;
   font-weight: 600 !important;
+  font-size: 11px !important;
   margin-bottom: 4px !important;
+  border-bottom: 1px solid #1E2638;
+  padding-bottom: 4px;
 }

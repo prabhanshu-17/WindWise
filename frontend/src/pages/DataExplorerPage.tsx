@@ -2,15 +2,9 @@ import React, { useState, useEffect } from 'react';
 import {
   Database,
   Search,
-  Filter,
   Download,
-  CheckCircle,
-  AlertTriangle,
-  ArrowUpDown,
   ChevronLeft,
   ChevronRight,
-  ShieldCheck,
-  RefreshCw,
   X
 } from 'lucide-react';
 import { fetchDataQuality, fetchActuals, fetchForecasts, getExportUrl } from '../services/api';
@@ -27,7 +21,6 @@ export const DataExplorerPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filters & Pagination
   const [startDate, setStartDate] = useState<string>('2026-01-01');
   const [endDate, setEndDate] = useState<string>('2026-01-31');
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -62,7 +55,6 @@ export const DataExplorerPage: React.FC = () => {
   if (loading && !qualityData) return <LoadingSkeleton />;
   if (error && !qualityData) return <ErrorState message={error} onRetry={loadAll} />;
 
-  // Filter tab data
   const filteredActuals = actuals.filter((r) => {
     const q = searchTerm.toLowerCase();
     return r.startTime.toLowerCase().includes(q) || (r.settlementDate && r.settlementDate.includes(q));
@@ -83,229 +75,219 @@ export const DataExplorerPage: React.FC = () => {
     setActiveTab(tab);
     setCurrentPage(1);
     setSearchTerm('');
-    showToast(`Switched to ${tab === 'actuals' ? 'Actuals (FUELHH)' : 'Forecasts (WINDFOR)'}`, 'info');
+    showToast(`Dataset: ${tab === 'actuals' ? 'FUELHH Actuals' : 'WINDFOR Forecasts'}`, 'info');
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-fadeIn">
+    <div className="space-y-5 sm:space-y-6 animate-fadeIn">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 pb-2 border-b border-wind-border">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#1E2638]">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-wind-textPrimary tracking-tight flex items-center gap-2">
-            <Database className="w-5 sm:w-6 h-5 sm:h-6 text-wind-accent" />
-            Data Explorer & Audit
+          <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight flex items-center gap-2">
+            <Database className="w-5 h-5 text-teal-400" />
+            Elexon BMRS Stream Audit & Quality Verification
           </h1>
-          <p className="text-xs text-wind-textSecondary mt-0.5 sm:mt-1">
-            Audit and inspect raw records from Elexon FUELHH and WINDFOR streams for January 2026.
+          <p className="text-xs text-slate-400 mt-0.5">
+            Audit raw half-hourly FUELHH outturn records and multi-vintage WINDFOR stream feeds (January 2026)
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <a
-            href={getExportUrl(activeTab, '2026-01')}
-            download={`windwise_${activeTab}_2026-01.csv`}
-            onClick={() => showToast(`Exporting ${activeTab === 'actuals' ? 'actuals' : 'forecasts'} CSV...`, 'info')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-wind-card hover:bg-wind-cardSecondary border border-wind-border text-xs font-semibold text-wind-textPrimary transition-all shadow-sm active:scale-95"
-          >
-            <Download className="w-3.5 h-3.5 text-wind-accent" />
-            <span>Export {activeTab === 'actuals' ? 'Actuals' : 'Forecasts'} CSV</span>
-          </a>
-        </div>
+        <a
+          href={getExportUrl(activeTab, '2026-01')}
+          download={`windwise_${activeTab}_2026-01.csv`}
+          onClick={() => showToast(`Exporting ${activeTab === 'actuals' ? 'actuals' : 'forecasts'} CSV...`, 'info')}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#161D2A] hover:bg-[#1E2638] border border-[#2A364E] text-xs font-medium text-slate-200 transition-colors shadow-xs self-start sm:self-auto"
+        >
+          <Download className="w-3.5 h-3.5 text-teal-400" />
+          <span>Export {activeTab === 'actuals' ? 'Actuals' : 'Forecasts'} CSV</span>
+        </a>
       </div>
 
       {/* DATA QUALITY SUMMARY CARDS */}
       {qualityData && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
-          <div className="p-3 sm:p-3.5 rounded-xl bg-wind-card border border-wind-border">
-            <span className="text-[10px] font-semibold uppercase text-wind-textSecondary">WIND Actual Records</span>
-            <p className="text-base sm:text-lg font-extrabold font-mono text-emerald-400 mt-0.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+          <div className="p-3 rounded-xl bg-[#111620] border border-[#1E2638]">
+            <span className="text-[10px] font-mono uppercase text-slate-500">WIND Actual Records</span>
+            <p className="text-base font-bold font-mono text-emerald-400 mt-0.5 tabular-nums">
               {qualityData.windActualRecords.toLocaleString()}
             </p>
-            <span className="text-[10px] text-wind-textSecondary">FUELHH Filtered</span>
+            <span className="text-[10px] text-slate-500 font-mono">FUELHH Stream</span>
           </div>
 
-          <div className="p-3 sm:p-3.5 rounded-xl bg-wind-card border border-wind-border">
-            <span className="text-[10px] font-semibold uppercase text-wind-textSecondary">Non-Wind Dropped</span>
-            <p className="text-base sm:text-lg font-extrabold font-mono text-slate-400 mt-0.5">
+          <div className="p-3 rounded-xl bg-[#111620] border border-[#1E2638]">
+            <span className="text-[10px] font-mono uppercase text-slate-500">Non-Wind Dropped</span>
+            <p className="text-base font-bold font-mono text-slate-400 mt-0.5 tabular-nums">
               {qualityData.nonWindActualRecordsFiltered.toLocaleString()}
             </p>
-            <span className="text-[10px] text-wind-textSecondary">Thermal/Nuclear</span>
+            <span className="text-[10px] text-slate-500 font-mono">Thermal/Nuclear</span>
           </div>
 
-          <div className="p-3 sm:p-3.5 rounded-xl bg-wind-card border border-wind-border">
-            <span className="text-[10px] font-semibold uppercase text-wind-textSecondary">WINDFOR Records</span>
-            <p className="text-base sm:text-lg font-extrabold font-mono text-sky-400 mt-0.5">
+          <div className="p-3 rounded-xl bg-[#111620] border border-[#1E2638]">
+            <span className="text-[10px] font-mono uppercase text-slate-500">WINDFOR Records</span>
+            <p className="text-base font-bold font-mono text-sky-400 mt-0.5 tabular-nums">
               {qualityData.totalForecastRecords.toLocaleString()}
             </p>
-            <span className="text-[10px] text-wind-textSecondary">All Vintages</span>
+            <span className="text-[10px] text-slate-500 font-mono">All Vintages</span>
           </div>
 
-          <div className="p-3 sm:p-3.5 rounded-xl bg-wind-card border border-wind-border">
-            <span className="text-[10px] font-semibold uppercase text-wind-textSecondary">Duplicates Removed</span>
-            <p className="text-base sm:text-lg font-extrabold font-mono text-wind-textPrimary mt-0.5">
+          <div className="p-3 rounded-xl bg-[#111620] border border-[#1E2638]">
+            <span className="text-[10px] font-mono uppercase text-slate-500">Duplicates Filtered</span>
+            <p className="text-base font-bold font-mono text-white mt-0.5 tabular-nums">
               {qualityData.duplicateRecordsRemoved}
             </p>
-            <span className="text-[10px] text-emerald-400">Strict Deduplication</span>
+            <span className="text-[10px] text-emerald-400 font-mono">Deduplicated</span>
           </div>
 
-          <div className="p-3 sm:p-3.5 rounded-xl bg-wind-card border border-wind-border">
-            <span className="text-[10px] font-semibold uppercase text-wind-textSecondary">Invalid / Nulls</span>
-            <p className="text-base sm:text-lg font-extrabold font-mono text-emerald-400 mt-0.5">
+          <div className="p-3 rounded-xl bg-[#111620] border border-[#1E2638]">
+            <span className="text-[10px] font-mono uppercase text-slate-500">Invalid / Nulls</span>
+            <p className="text-base font-bold font-mono text-emerald-400 mt-0.5 tabular-nums">
               {qualityData.invalidValuesCount}
             </p>
-            <span className="text-[10px] text-emerald-400">Clean Dataset</span>
+            <span className="text-[10px] text-emerald-400 font-mono">Zero Nulls</span>
           </div>
 
-          <div className="p-3 sm:p-3.5 rounded-xl bg-wind-card border border-wind-border col-span-2 sm:col-span-1">
-            <span className="text-[10px] font-semibold uppercase text-wind-textSecondary">Matched Coverage</span>
-            <p className="text-base sm:text-lg font-extrabold font-mono text-wind-accent mt-0.5">
+          <div className="p-3 rounded-xl bg-[#111620] border border-[#1E2638] col-span-2 sm:col-span-1">
+            <span className="text-[10px] font-mono uppercase text-slate-500">Matched Coverage</span>
+            <p className="text-base font-bold font-mono text-teal-400 mt-0.5 tabular-nums">
               {qualityData.matchedIntervals} / {qualityData.expectedIntervals}
             </p>
-            <span className="text-[10px] text-wind-accent font-semibold">{qualityData.coveragePercent.toFixed(1)}% Complete</span>
+            <span className="text-[10px] text-teal-400 font-mono font-semibold">{qualityData.coveragePercent.toFixed(1)}% Complete</span>
           </div>
         </div>
       )}
 
-      {/* TABS & FILTERS BAR */}
-      <div className="p-3.5 sm:p-4 rounded-2xl bg-wind-card border border-wind-border shadow-card space-y-3 sm:space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          {/* Tabs */}
-          <div className="flex items-center gap-1 bg-wind-sidebar p-1 rounded-xl border border-wind-border max-w-full">
-            <button
-              onClick={() => handleTabSwitch('actuals')}
-              className={`flex-1 sm:flex-initial px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs font-semibold transition-all active:scale-95 text-center ${
-                activeTab === 'actuals'
-                  ? 'bg-wind-cardSecondary text-emerald-400 shadow-sm'
-                  : 'text-wind-textSecondary hover:text-wind-textPrimary'
-              }`}
-            >
-              Actuals (FUELHH)
-            </button>
-            <button
-              onClick={() => handleTabSwitch('forecasts')}
-              className={`flex-1 sm:flex-initial px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs font-semibold transition-all active:scale-95 text-center ${
-                activeTab === 'forecasts'
-                  ? 'bg-wind-cardSecondary text-sky-400 shadow-sm'
-                  : 'text-wind-textSecondary hover:text-wind-textPrimary'
-              }`}
-            >
-              Forecasts (WINDFOR)
-            </button>
-          </div>
+      {/* TABS & SEARCH BAR */}
+      <div className="p-3 rounded-xl bg-[#111620] border border-[#1E2638] shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        {/* Tabs */}
+        <div className="flex items-center gap-1 bg-[#0C1017] p-1 rounded-lg border border-[#1E2638] max-w-full">
+          <button
+            onClick={() => handleTabSwitch('actuals')}
+            className={`px-3 py-1.5 rounded text-xs font-mono font-semibold transition-colors ${
+              activeTab === 'actuals'
+                ? 'bg-[#1C2536] text-emerald-400 border border-[#2A364E]'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Actuals (FUELHH)
+          </button>
+          <button
+            onClick={() => handleTabSwitch('forecasts')}
+            className={`px-3 py-1.5 rounded text-xs font-mono font-semibold transition-colors ${
+              activeTab === 'forecasts'
+                ? 'bg-[#1C2536] text-sky-400 border border-[#2A364E]'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Forecasts (WINDFOR)
+          </button>
+        </div>
 
-          {/* Search Box */}
-          <div className="relative w-full sm:w-64">
-            <Search className="w-3.5 h-3.5 text-wind-textSecondary absolute left-3 top-2.5" />
-            <input
-              type="text"
-              placeholder={`Search ${activeTab}...`}
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-wind-sidebar border border-wind-border text-xs text-wind-textPrimary placeholder:text-wind-textSecondary/50 focus:outline-none focus:border-wind-accent"
-            />
-          </div>
+        {/* Search */}
+        <div className="relative w-full sm:w-60">
+          <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
+          <input
+            type="text"
+            placeholder={`Search ${activeTab}...`}
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-[#0C1017] border border-[#1E2638] text-xs font-mono text-white placeholder:text-slate-600 focus:outline-none focus:border-teal-400"
+          />
         </div>
       </div>
 
-      {/* TABLE VIEW */}
-      <div className="p-4 sm:p-6 rounded-2xl bg-wind-card border border-wind-border shadow-card space-y-4">
-        {/* Mobile Swipe Hint */}
-        <div className="sm:hidden text-[11px] text-wind-textSecondary flex items-center justify-between px-1">
-          <span>Tap row to inspect</span>
-          <span className="font-mono text-wind-accent">Swipe left/right →</span>
-        </div>
-
-        <div className="overflow-x-auto rounded-xl border border-wind-border/80">
+      {/* TABLE */}
+      <div className="p-4 rounded-xl bg-[#111620] border border-[#1E2638] shadow-card space-y-3">
+        <div className="overflow-x-auto rounded-lg border border-[#1E2638]">
           {activeTab === 'actuals' ? (
-            <table className="w-full text-left text-xs whitespace-nowrap">
-              <thead className="bg-wind-sidebar/90 text-wind-textSecondary uppercase text-[10px] tracking-wider border-b border-wind-border font-semibold">
+            <table className="w-full text-left text-xs whitespace-nowrap font-mono">
+              <thead className="bg-[#0C1017] text-slate-400 uppercase text-[10px] tracking-wider border-b border-[#1E2638]">
                 <tr>
-                  <th className="py-3 px-4">Start Time (UTC)</th>
-                  <th className="py-3 px-4">Settlement Date</th>
-                  <th className="py-3 px-4 text-center">Period</th>
-                  <th className="py-3 px-4">Fuel Type</th>
-                  <th className="py-3 px-4 text-right">Generation (MW)</th>
-                  <th className="py-3 px-4 text-center">Validation</th>
+                  <th className="py-2.5 px-3.5">Delivery Start (UTC)</th>
+                  <th className="py-2.5 px-3.5">Settlement Date</th>
+                  <th className="py-2.5 px-3.5 text-center">Period</th>
+                  <th className="py-2.5 px-3.5">Fuel Type</th>
+                  <th className="py-2.5 px-3.5 text-right">Generation (MW)</th>
+                  <th className="py-2.5 px-3.5 text-center">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-wind-border/60">
+              <tbody className="divide-y divide-[#1E2638]/60">
                 {paginatedActuals.length > 0 ? (
                   paginatedActuals.map((row, idx) => (
                     <tr
                       key={`${row.startTime}-${idx}`}
                       onClick={() => setSelectedItem({ type: 'actual', ...row })}
-                      className="hover:bg-wind-cardSecondary/60 transition-colors cursor-pointer active:bg-wind-accent/10"
+                      className="hover:bg-[#161D2A] transition-colors cursor-pointer"
                     >
-                      <td className="py-2.5 px-4 font-mono font-medium text-wind-textPrimary">
+                      <td className="py-2 px-3.5 font-medium text-slate-200">
                         {row.startTime}
                       </td>
-                      <td className="py-2.5 px-4 font-mono text-wind-textSecondary">
+                      <td className="py-2 px-3.5 text-slate-400">
                         {row.settlementDate || '—'}
                       </td>
-                      <td className="py-2.5 px-4 text-center font-mono text-wind-textSecondary">
+                      <td className="py-2 px-3.5 text-center text-slate-400">
                         {row.settlementPeriod || '—'}
                       </td>
-                      <td className="py-2.5 px-4">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <td className="py-2 px-3.5">
+                        <span className="px-1.5 py-0.2 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                           {row.fuelType}
                         </span>
                       </td>
-                      <td className="py-2.5 px-4 text-right font-mono font-bold text-emerald-400">
+                      <td className="py-2 px-3.5 text-right font-bold text-emerald-400 tabular-nums">
                         {Math.round(row.generation).toLocaleString()} MW
                       </td>
-                      <td className="py-2.5 px-4 text-center">
-                        <span className="text-[10px] text-emerald-400 font-medium">Valid</span>
+                      <td className="py-2 px-3.5 text-center">
+                        <span className="text-[10px] text-emerald-400">Valid</span>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-wind-textSecondary">
-                      No actual generation records matched your criteria.
+                    <td colSpan={6} className="py-6 text-center text-slate-500">
+                      No records matched the criteria.
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           ) : (
-            <table className="w-full text-left text-xs whitespace-nowrap">
-              <thead className="bg-wind-sidebar/90 text-wind-textSecondary uppercase text-[10px] tracking-wider border-b border-wind-border font-semibold">
+            <table className="w-full text-left text-xs whitespace-nowrap font-mono">
+              <thead className="bg-[#0C1017] text-slate-400 uppercase text-[10px] tracking-wider border-b border-[#1E2638]">
                 <tr>
-                  <th className="py-3 px-4">Delivery Start (UTC)</th>
-                  <th className="py-3 px-4">Publish Time (Vintage)</th>
-                  <th className="py-3 px-4 text-right">Forecast MW</th>
-                  <th className="py-3 px-4 text-center">Validation</th>
+                  <th className="py-2.5 px-3.5">Delivery Start (UTC)</th>
+                  <th className="py-2.5 px-3.5">Publish Vintage</th>
+                  <th className="py-2.5 px-3.5 text-right">Forecast MW</th>
+                  <th className="py-2.5 px-3.5 text-center">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-wind-border/60">
+              <tbody className="divide-y divide-[#1E2638]/60">
                 {paginatedForecasts.length > 0 ? (
                   paginatedForecasts.map((row, idx) => (
                     <tr
                       key={`${row.startTime}-${row.publishTime}-${idx}`}
                       onClick={() => setSelectedItem({ type: 'forecast', ...row })}
-                      className="hover:bg-wind-cardSecondary/60 transition-colors cursor-pointer active:bg-wind-accent/10"
+                      className="hover:bg-[#161D2A] transition-colors cursor-pointer"
                     >
-                      <td className="py-2.5 px-4 font-mono font-medium text-wind-textPrimary">
+                      <td className="py-2 px-3.5 font-medium text-slate-200">
                         {row.startTime}
                       </td>
-                      <td className="py-2.5 px-4 font-mono text-wind-accentBlue">
+                      <td className="py-2 px-3.5 text-sky-400">
                         {row.publishTime}
                       </td>
-                      <td className="py-2.5 px-4 text-right font-mono font-bold text-sky-400">
+                      <td className="py-2 px-3.5 text-right font-bold text-sky-400 tabular-nums">
                         {Math.round(row.generation).toLocaleString()} MW
                       </td>
-                      <td className="py-2.5 px-4 text-center">
-                        <span className="text-[10px] text-sky-400 font-medium">Valid WINDFOR</span>
+                      <td className="py-2 px-3.5 text-center">
+                        <span className="text-[10px] text-sky-400">Valid</span>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="py-8 text-center text-wind-textSecondary">
-                      No forecast records matched your criteria.
+                    <td colSpan={4} className="py-6 text-center text-slate-500">
+                      No records matched the criteria.
                     </td>
                   </tr>
                 )}
@@ -314,76 +296,76 @@ export const DataExplorerPage: React.FC = () => {
           )}
         </div>
 
-        {/* Pagination Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-wind-textSecondary pt-2">
+        {/* Pagination */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-slate-400 pt-1 font-mono">
           <span>
-            Showing {startIndex + 1}–{Math.min(startIndex + pageSize, totalItems)} of {totalItems} records
+            {startIndex + 1}–{Math.min(startIndex + pageSize, totalItems)} of {totalItems} records
           </span>
-          <div className="flex items-center gap-1.5 self-center sm:self-auto">
+          <div className="flex items-center gap-1 self-center sm:self-auto">
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="p-2 rounded-xl bg-wind-sidebar border border-wind-border hover:border-wind-accent disabled:opacity-40 transition-colors active:scale-95"
+              className="p-1 rounded bg-[#0C1017] border border-[#1E2638] hover:border-slate-500 disabled:opacity-30 transition-colors"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3.5 h-3.5" />
             </button>
-            <span className="px-3 py-1 font-mono text-wind-textPrimary font-semibold">
+            <span className="px-2 py-0.5 text-white">
               {currentPage} / {totalPages}
             </span>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="p-2 rounded-xl bg-wind-sidebar border border-wind-border hover:border-wind-accent disabled:opacity-40 transition-colors active:scale-95"
+              className="p-1 rounded bg-[#0C1017] border border-[#1E2638] hover:border-slate-500 disabled:opacity-30 transition-colors"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Row Modal on Tap */}
+      {/* Row Modal */}
       {selectedItem && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-wind-card border border-wind-border rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between pb-2 border-b border-wind-border">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#111620] border border-[#1E2638] rounded-xl max-w-md w-full p-4 space-y-3 shadow-dropdown">
+            <div className="flex items-center justify-between pb-2 border-b border-[#1E2638]">
               <div className="flex items-center gap-2">
-                <Database className="w-4 h-4 text-wind-accent" />
-                <h4 className="text-sm font-bold text-wind-textPrimary">Record Inspection</h4>
+                <Database className="w-4 h-4 text-teal-400" />
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono">BMRS Stream Record</h4>
               </div>
               <button
                 onClick={() => setSelectedItem(null)}
-                className="p-1 rounded-lg text-wind-textSecondary hover:text-wind-textPrimary hover:bg-wind-cardSecondary"
+                className="p-1 rounded text-slate-400 hover:text-white hover:bg-[#161D2A]"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-2.5 text-xs">
-              <div className="flex justify-between py-1 border-b border-wind-border/40">
-                <span className="text-wind-textSecondary">Stream Dataset:</span>
-                <span className="font-mono font-bold text-wind-accent">
-                  {selectedItem.type === 'actual' ? 'Elexon FUELHH' : 'Elexon WINDFOR'}
+            <div className="space-y-2 text-xs font-mono">
+              <div className="flex justify-between py-1 border-b border-[#1E2638]">
+                <span className="text-slate-400">Stream Dataset:</span>
+                <span className="text-teal-400 font-bold">
+                  {selectedItem.type === 'actual' ? 'Elexon FUELHH (WIND)' : 'Elexon WINDFOR'}
                 </span>
               </div>
-              <div className="flex justify-between py-1 border-b border-wind-border/40">
-                <span className="text-wind-textSecondary">Start Time (UTC):</span>
-                <span className="font-mono text-wind-textPrimary">{selectedItem.startTime}</span>
+              <div className="flex justify-between py-1 border-b border-[#1E2638]">
+                <span className="text-slate-400">Start Time (UTC):</span>
+                <span className="text-white">{selectedItem.startTime}</span>
               </div>
               {selectedItem.publishTime && (
-                <div className="flex justify-between py-1 border-b border-wind-border/40">
-                  <span className="text-wind-textSecondary">Publish Vintage:</span>
-                  <span className="font-mono text-sky-400">{selectedItem.publishTime}</span>
+                <div className="flex justify-between py-1 border-b border-[#1E2638]">
+                  <span className="text-slate-400">Publish Vintage:</span>
+                  <span className="text-sky-400">{selectedItem.publishTime}</span>
                 </div>
               )}
               {selectedItem.settlementPeriod && (
-                <div className="flex justify-between py-1 border-b border-wind-border/40">
-                  <span className="text-wind-textSecondary">Settlement Period:</span>
-                  <span className="font-mono text-wind-textPrimary">Period {selectedItem.settlementPeriod}</span>
+                <div className="flex justify-between py-1 border-b border-[#1E2638]">
+                  <span className="text-slate-400">Settlement Period:</span>
+                  <span className="text-slate-200">Period {selectedItem.settlementPeriod}</span>
                 </div>
               )}
               <div className="flex justify-between py-1">
-                <span className="text-wind-textSecondary">Generation Value:</span>
-                <span className="font-mono font-bold text-emerald-400 text-sm">
+                <span className="text-slate-400">Generation Volume:</span>
+                <span className="text-emerald-400 font-bold">
                   {Math.round(selectedItem.generation).toLocaleString()} MW
                 </span>
               </div>
@@ -391,7 +373,7 @@ export const DataExplorerPage: React.FC = () => {
 
             <button
               onClick={() => setSelectedItem(null)}
-              className="w-full py-2 rounded-xl bg-wind-accent text-slate-900 font-bold text-xs hover:bg-wind-accent/90 transition-colors shadow-glow-green"
+              className="w-full py-2 rounded-lg bg-[#161D2A] hover:bg-[#1C2536] border border-[#2A364E] text-slate-200 font-mono text-xs transition-colors"
             >
               Done
             </button>

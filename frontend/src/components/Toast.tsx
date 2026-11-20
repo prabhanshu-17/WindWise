@@ -34,7 +34,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3800);
+    }, 3200);
   }, []);
 
   const removeToast = (id: string) => {
@@ -51,21 +51,21 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />;
       case 'info':
       default:
-        return <Info className="w-4 h-4 text-sky-400 shrink-0" />;
+        return <Info className="w-4 h-4 text-teal-400 shrink-0" />;
     }
   };
 
   const getStyles = (type: ToastType) => {
     switch (type) {
       case 'success':
-        return 'border-emerald-500/30 bg-[#151F30]/95 text-emerald-300';
+        return 'border-emerald-500/30 bg-[#111620] text-emerald-300';
       case 'error':
-        return 'border-rose-500/30 bg-[#151F30]/95 text-rose-300';
+        return 'border-rose-500/30 bg-[#111620] text-rose-300';
       case 'warning':
-        return 'border-amber-500/30 bg-[#151F30]/95 text-amber-300';
+        return 'border-amber-500/30 bg-[#111620] text-amber-300';
       case 'info':
       default:
-        return 'border-sky-500/30 bg-[#151F30]/95 text-sky-300';
+        return 'border-[#2A364E] bg-[#111620] text-slate-200';
     }
   };
 
@@ -77,19 +77,19 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`pointer-events-auto flex items-center justify-between gap-3 px-4 py-3 rounded-xl border backdrop-blur-md shadow-2xl transition-all duration-300 animate-fadeIn ${getStyles(
+            className={`pointer-events-auto flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-lg border shadow-dropdown transition-all animate-fadeIn ${getStyles(
               toast.type
             )}`}
           >
             <div className="flex items-center gap-2.5 min-w-0">
               {getIcon(toast.type)}
-              <span className="text-xs font-medium text-wind-textPrimary truncate sm:whitespace-normal">
+              <span className="text-xs font-mono font-medium truncate sm:whitespace-normal">
                 {toast.message}
               </span>
             </div>
             <button
               onClick={() => removeToast(toast.id)}
-              className="text-wind-textSecondary hover:text-wind-textPrimary p-1 rounded-lg transition-colors ml-2 shrink-0"
+              className="text-slate-400 hover:text-white p-0.5 rounded transition-colors ml-1.5 shrink-0"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -99,4 +99,3 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     </ToastContext.Provider>
   );
 };
-

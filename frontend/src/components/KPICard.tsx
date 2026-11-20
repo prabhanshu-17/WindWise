@@ -31,21 +31,20 @@ export const KPICard: React.FC<KPICardProps> = ({
   const tooltipRef = useRef<HTMLDivElement>(null);
   const { showToast } = useToast();
 
-  const colorStyles = {
-    green: 'border-l-wind-accent text-wind-accent bg-wind-accent/10',
-    blue: 'border-l-wind-accentBlue text-wind-accentBlue bg-wind-accentBlue/10',
-    amber: 'border-l-wind-warning text-wind-warning bg-wind-warning/10',
-    rose: 'border-l-wind-danger text-wind-danger bg-wind-danger/10',
+  const accentBorder = {
+    green: 'border-t-emerald-500/80',
+    blue: 'border-t-sky-500/80',
+    amber: 'border-t-amber-500/80',
+    rose: 'border-t-rose-500/80',
   }[highlightColor];
 
-  const badgeStyles = {
-    positive: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
-    negative: 'bg-rose-500/10 text-rose-400 border-rose-500/30',
-    neutral: 'bg-slate-500/10 text-slate-400 border-slate-500/30',
-    accent: 'bg-sky-500/10 text-sky-400 border-sky-500/30',
-  }[badge?.variant || 'neutral'];
+  const iconColor = {
+    green: 'text-emerald-400 bg-emerald-500/10',
+    blue: 'text-sky-400 bg-sky-500/10',
+    amber: 'text-amber-400 bg-amber-500/10',
+    rose: 'text-rose-400 bg-rose-500/10',
+  }[highlightColor];
 
-  // Handle outside click to close tooltip on mobile
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent | TouchEvent) => {
       if (tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) {
@@ -68,26 +67,28 @@ export const KPICard: React.FC<KPICardProps> = ({
       const textToCopy = `${value} ${unit || ''}`.trim();
       navigator.clipboard.writeText(textToCopy);
       setCopied(true);
-      showToast(`Copied ${title}: ${textToCopy}`, 'info');
+      showToast(`Copied: ${textToCopy}`, 'info');
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
   return (
-    <div className="relative p-4 sm:p-5 rounded-2xl bg-wind-card border border-wind-border hover:border-wind-borderLight transition-all duration-200 shadow-card group hover:shadow-lg">
-      {/* Top Header Row */}
-      <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
-        <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-wind-textSecondary truncate">
+    <div
+      className={`relative p-4 rounded-xl bg-[#111620] border border-[#1E2638] border-t-2 ${accentBorder} shadow-card hover:border-[#2A364E] transition-all group`}
+    >
+      {/* Header: Title and Metric Type Icon */}
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <span className="text-[11px] font-medium tracking-wide text-slate-400 uppercase font-mono">
           {title}
         </span>
         <div className="flex items-center gap-1.5 shrink-0">
           {badge && (
-            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badgeStyles}`}>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-white/[0.04] text-slate-400 border border-white/[0.06]">
               {badge.label}
             </span>
           )}
 
-          {/* Interactive Info Icon / Touch Popover */}
+          {/* Formula Tooltip Trigger */}
           <div className="relative" ref={tooltipRef}>
             <button
               type="button"
@@ -97,60 +98,59 @@ export const KPICard: React.FC<KPICardProps> = ({
               }}
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
-              className="text-wind-textSecondary hover:text-wind-textPrimary p-1 rounded-lg transition-colors active:scale-95"
-              aria-label="Metric explanation"
-              title="Click or tap for calculation formula"
+              className="text-slate-500 hover:text-slate-300 p-0.5 rounded transition-colors"
+              aria-label="Metric calculation details"
+              title="Metric calculation details"
             >
               <Info className="w-3.5 h-3.5" />
             </button>
 
             {showTooltip && (
-              <div className="absolute right-0 top-7 w-64 sm:w-72 max-w-[calc(100vw-3rem)] p-3.5 rounded-xl bg-wind-cardSecondary border border-wind-border text-xs text-wind-textPrimary shadow-2xl z-40 animate-fadeIn">
-                <div className="flex items-center justify-between font-semibold text-wind-accent mb-1 pb-1 border-b border-wind-border/60">
+              <div className="absolute right-0 top-6 w-64 max-w-[calc(100vw-3rem)] p-3 rounded-xl bg-[#161D2A] border border-[#2A364E] text-xs text-slate-200 shadow-dropdown z-40 animate-fadeIn">
+                <div className="flex items-center justify-between font-mono text-[11px] text-teal-400 mb-1.5 pb-1 border-b border-[#1E2638]">
                   <span>{title}</span>
-                  <span className="text-[10px] font-mono text-wind-textSecondary">Formula</span>
+                  <span className="text-slate-500 text-[10px]">ELEXON BMRS</span>
                 </div>
-                <p className="text-[11px] leading-relaxed text-wind-textSecondary mb-2 font-sans">
+                <p className="text-[11px] leading-relaxed text-slate-300 mb-2 font-mono">
                   {formulaTooltip}
                 </p>
-                <div className="pt-1.5 border-t border-wind-border/60 text-[10px] text-wind-textSecondary/80 font-mono">
-                  Calculated dynamically from January 2026 Elexon data
+                <div className="text-[10px] text-slate-500 font-mono pt-1 border-t border-[#1E2638]">
+                  Target: January 1–31, 2026
                 </div>
               </div>
             )}
           </div>
 
-          <div className={`p-2 rounded-xl ${colorStyles} transition-transform duration-200 group-hover:scale-105`}>
-            <Icon className="w-4 h-4" />
+          <div className={`p-1.5 rounded-md ${iconColor}`}>
+            <Icon className="w-3.5 h-3.5" />
           </div>
         </div>
       </div>
 
-      {/* Main KPI Value with quick copy interaction */}
-      <div className="flex items-baseline justify-between gap-2 mb-1">
+      {/* Primary Metric Value */}
+      <div className="flex items-baseline justify-between gap-2 mb-1.5">
         <div className="flex items-baseline gap-1.5 min-w-0">
-          <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-wind-textPrimary font-mono truncate">
+          <span className="text-2xl sm:text-[26px] font-bold tracking-tight text-white font-mono tabular-nums">
             {value !== null && value !== undefined ? value : '—'}
           </span>
           {unit && (
-            <span className="text-xs font-bold text-wind-textSecondary uppercase font-mono shrink-0">
+            <span className="text-xs font-mono font-medium text-slate-400">
               {unit}
             </span>
           )}
         </div>
 
-        {/* Copy button */}
         <button
           onClick={handleCopy}
           title="Copy metric value"
-          className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-wind-cardSecondary text-wind-textSecondary hover:text-wind-accent transition-all text-xs"
+          className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-[#161D2A] text-slate-400 hover:text-teal-400 transition-opacity"
         >
           {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
         </button>
       </div>
 
-      {/* Short explanation */}
-      <p className="text-[11px] sm:text-xs text-wind-textSecondary leading-normal">
+      {/* Subtext */}
+      <p className="text-[11px] text-slate-400 leading-normal line-clamp-2">
         {explanation}
       </p>
     </div>

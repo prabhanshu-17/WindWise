@@ -2,19 +2,15 @@ import React, { useState, useEffect } from 'react';
 import {
   Compass,
   Calendar,
-  Clock,
-  Filter,
+  Layers,
   Download,
   Search,
   ArrowUpDown,
   CheckCircle,
-  AlertCircle,
-  Layers,
   ChevronLeft,
   ChevronRight,
   Eye,
   EyeOff,
-  Info,
   X
 } from 'lucide-react';
 import {
@@ -25,12 +21,11 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
-  ReferenceLine
+  Legend
 } from 'recharts';
 import { fetchForecastExplorer, getExportUrl } from '../services/api';
 import { ForecastExplorerData, TimeSeriesInterval } from '../types';
-import { LoadingSkeleton, ErrorState, EmptyState } from '../components/LoadingSkeleton';
+import { LoadingSkeleton, ErrorState } from '../components/LoadingSkeleton';
 import { useToast } from '../components/Toast';
 
 export const ForecastExplorerPage: React.FC = () => {
@@ -82,7 +77,6 @@ export const ForecastExplorerPage: React.FC = () => {
   if (loading && !data) return <LoadingSkeleton />;
   if (error && !data) return <ErrorState message={error} onRetry={loadData} />;
 
-  // Filter and sort intervals for table
   const intervals = data ? data.intervals : [];
   const filteredIntervals = intervals.filter((row) => {
     const timeStr = row.deliveryTimeLocal.toLowerCase();
@@ -117,42 +111,42 @@ export const ForecastExplorerPage: React.FC = () => {
     setDeliveryDate(d);
     setSelectedVintage('');
     setCurrentPage(1);
-    showToast(`Loaded forecasts for ${d}`, 'info');
+    showToast(`Loaded ${d}`, 'info');
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-fadeIn">
+    <div className="space-y-5 sm:space-y-6 animate-fadeIn">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 pb-2 border-b border-wind-border">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#1E2638]">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-wind-textPrimary tracking-tight flex items-center gap-2">
-            <Compass className="w-5 sm:w-6 h-5 sm:h-6 text-wind-accent" />
-            Forecast Explorer
+          <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight flex items-center gap-2">
+            <Compass className="w-5 h-5 text-teal-400" />
+            Forecast Explorer & Vintage Run Audit
           </h1>
-          <p className="text-xs text-wind-textSecondary mt-0.5 sm:mt-1">
-            Explore available wind generation forecasts by delivery interval and publication time.
+          <p className="text-xs text-slate-400 mt-0.5">
+            Audit available wind generation forecast vintages across National Grid ESO publication runs
           </p>
         </div>
 
         <a
           href={getExportUrl('forecasts', '2026-01')}
           download="windwise_forecasts_2026-01.csv"
-          onClick={() => showToast('Downloading forecasts CSV export...', 'info')}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-wind-card hover:bg-wind-cardSecondary border border-wind-border text-xs font-semibold text-wind-textPrimary transition-all shadow-sm self-start sm:self-auto active:scale-95"
+          onClick={() => showToast('Exporting forecasts CSV...', 'info')}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#161D2A] hover:bg-[#1E2638] border border-[#2A364E] text-xs font-medium text-slate-200 transition-colors shadow-xs self-start sm:self-auto"
         >
-          <Download className="w-3.5 h-3.5 text-wind-accent" />
+          <Download className="w-3.5 h-3.5 text-teal-400" />
           <span>Export Forecasts CSV</span>
         </a>
       </div>
 
       {/* FILTER CONTROLS BAR */}
-      <div className="p-3.5 sm:p-4 rounded-2xl bg-wind-card border border-wind-border shadow-card flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="p-3 rounded-xl bg-[#111620] border border-[#1E2638] shadow-card flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         {/* Date & Vintage Pickers */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           {/* Delivery Date Picker */}
-          <div className="flex items-center gap-2 bg-wind-sidebar px-3 py-1.5 rounded-xl border border-wind-border">
-            <Calendar className="w-3.5 h-3.5 text-wind-accent shrink-0" />
-            <span className="text-xs font-semibold text-wind-textSecondary">Date:</span>
+          <div className="flex items-center gap-2 bg-[#0C1017] px-2.5 py-1.5 rounded-lg border border-[#1E2638]">
+            <Calendar className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+            <span className="text-[11px] font-mono text-slate-400">Date:</span>
             <input
               type="date"
               min="2026-01-01"
@@ -163,28 +157,28 @@ export const ForecastExplorerPage: React.FC = () => {
                 setSelectedVintage('');
                 setCurrentPage(1);
               }}
-              className="bg-transparent text-xs font-mono text-wind-textPrimary focus:outline-none cursor-pointer"
+              className="bg-transparent text-xs font-mono text-white focus:outline-none cursor-pointer"
             />
           </div>
 
           {/* Vintage Selector */}
           {data && data.availableVintages && data.availableVintages.length > 0 && (
-            <div className="flex items-center gap-2 bg-wind-sidebar px-3 py-1.5 rounded-xl border border-wind-border max-w-full">
-              <Layers className="w-3.5 h-3.5 text-wind-accentBlue shrink-0" />
-              <span className="text-xs font-semibold text-wind-textSecondary shrink-0">Run:</span>
+            <div className="flex items-center gap-2 bg-[#0C1017] px-2.5 py-1.5 rounded-lg border border-[#1E2638] max-w-full">
+              <Layers className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+              <span className="text-[11px] font-mono text-slate-400 shrink-0">Vintage:</span>
               <select
                 value={selectedVintage}
                 onChange={(e) => {
                   setSelectedVintage(e.target.value);
                   setCutoffTime('');
                   setCurrentPage(1);
-                  showToast('Updated forecast vintage run', 'info');
+                  showToast('Vintage run updated', 'info');
                 }}
-                className="bg-transparent text-xs font-mono text-wind-textPrimary focus:outline-none max-w-[200px] truncate cursor-pointer"
+                className="bg-transparent text-xs font-mono text-white focus:outline-none max-w-[210px] truncate cursor-pointer"
               >
-                <option value="" className="bg-[#101827]">Latest Eligible Vintage</option>
+                <option value="" className="bg-[#0C1017]">Latest Eligible Run</option>
                 {data.availableVintages.map((v) => (
-                  <option key={v} value={v} className="bg-[#101827]">
+                  <option key={v} value={v} className="bg-[#0C1017]">
                     {v.replace('T', ' ').replace('Z', ' UTC')}
                   </option>
                 ))}
@@ -193,17 +187,17 @@ export const ForecastExplorerPage: React.FC = () => {
           )}
         </div>
 
-        {/* Quick Day Presets with horizontal scroll on mobile */}
-        <div className="flex items-center gap-1.5 overflow-x-auto max-w-full py-0.5">
-          <span className="text-[11px] text-wind-textSecondary mr-1 shrink-0">Presets:</span>
+        {/* Quick Date Presets */}
+        <div className="flex items-center gap-1 overflow-x-auto max-w-full py-0.5">
+          <span className="text-[11px] font-mono text-slate-500 mr-1 shrink-0">Presets:</span>
           {['2026-01-05', '2026-01-10', '2026-01-15', '2026-01-20', '2026-01-25'].map((d) => (
             <button
               key={d}
               onClick={() => handleDatePreset(d)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-mono transition-all shrink-0 active:scale-95 ${
+              className={`px-2 py-1 rounded text-[11px] font-mono transition-colors shrink-0 ${
                 deliveryDate === d
-                  ? 'bg-wind-accent/20 text-wind-accent border border-wind-accent/40 font-bold shadow-sm'
-                  : 'bg-wind-sidebar border border-wind-border text-wind-textSecondary hover:text-wind-textPrimary'
+                  ? 'bg-[#1C2536] text-white font-semibold border border-[#2A364E]'
+                  : 'bg-[#0C1017] border border-[#1E2638] text-slate-400 hover:text-white'
               }`}
             >
               Jan {d.split('-')[2]}
@@ -212,48 +206,48 @@ export const ForecastExplorerPage: React.FC = () => {
         </div>
       </div>
 
-      {/* PROMINENT CARD: Selected Forecast Vintage */}
+      {/* SELECTED VINTAGE SUMMARY CARD */}
       {data && (
-        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-wind-card to-wind-cardSecondary border border-wind-border shadow-card grid grid-cols-2 sm:grid-cols-5 gap-3.5 sm:gap-4">
-          <div>
-            <span className="text-[10px] sm:text-[11px] font-semibold uppercase text-wind-textSecondary">Publication Time</span>
-            <p className="text-xs sm:text-sm font-bold font-mono text-wind-accent mt-0.5 truncate">
-              {data.vintageStats.selectedVintageLocal || 'Latest Run'}
+        <div className="p-3.5 sm:p-4 rounded-xl bg-[#111620] border border-[#1E2638] shadow-card grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <div className="space-y-0.5">
+            <span className="text-[10px] font-mono uppercase text-slate-500">Publication Vintage</span>
+            <p className="text-xs sm:text-sm font-bold font-mono text-teal-400 truncate">
+              {data.vintageStats.selectedVintageLocal || 'Latest Available'}
             </p>
-            <span className="text-[10px] text-wind-textSecondary/70 font-mono truncate block">
-              {data.vintageStats.selectedVintage || 'System Default'}
+            <span className="text-[10px] text-slate-500 font-mono truncate block">
+              {data.vintageStats.selectedVintage || 'System Run'}
             </span>
           </div>
 
-          <div>
-            <span className="text-[10px] sm:text-[11px] font-semibold uppercase text-wind-textSecondary">Target Delivery</span>
-            <p className="text-xs sm:text-sm font-bold font-mono text-wind-textPrimary mt-0.5">
+          <div className="space-y-0.5">
+            <span className="text-[10px] font-mono uppercase text-slate-500">Target Delivery Day</span>
+            <p className="text-xs sm:text-sm font-bold font-mono text-white">
               {data.selectedDeliveryDate}
             </p>
-            <span className="text-[10px] text-wind-textSecondary">24 Delivery Hours</span>
+            <span className="text-[10px] text-slate-500 font-mono">24 Delivery Hours</span>
           </div>
 
-          <div>
-            <span className="text-[10px] sm:text-[11px] font-semibold uppercase text-wind-textSecondary">Peak Forecast</span>
-            <p className="text-xs sm:text-sm font-bold font-mono text-sky-400 mt-0.5">
+          <div className="space-y-0.5">
+            <span className="text-[10px] font-mono uppercase text-slate-500">Peak Forecast</span>
+            <p className="text-xs sm:text-sm font-bold font-mono text-sky-400">
               {data.vintageStats.maxForecastMW ? `${Math.round(data.vintageStats.maxForecastMW).toLocaleString()} MW` : '—'}
             </p>
-            <span className="text-[10px] text-wind-textSecondary">Maximum generation</span>
+            <span className="text-[10px] text-slate-500 font-mono">Day Maximum</span>
           </div>
 
-          <div>
-            <span className="text-[10px] sm:text-[11px] font-semibold uppercase text-wind-textSecondary">Mean Forecast</span>
-            <p className="text-xs sm:text-sm font-bold font-mono text-wind-textPrimary mt-0.5">
+          <div className="space-y-0.5">
+            <span className="text-[10px] font-mono uppercase text-slate-500">Mean Forecast</span>
+            <p className="text-xs sm:text-sm font-bold font-mono text-white">
               {data.vintageStats.avgForecastMW ? `${Math.round(data.vintageStats.avgForecastMW).toLocaleString()} MW` : '—'}
             </p>
-            <span className="text-[10px] text-wind-textSecondary">Day average</span>
+            <span className="text-[10px] text-slate-500 font-mono">Day Mean Volume</span>
           </div>
 
-          <div className="col-span-2 sm:col-span-1">
-            <span className="text-[10px] sm:text-[11px] font-semibold uppercase text-wind-textSecondary">Data Status</span>
-            <div className="flex items-center gap-1.5 mt-1">
+          <div className="col-span-2 sm:col-span-1 space-y-0.5">
+            <span className="text-[10px] font-mono uppercase text-slate-500">Verification</span>
+            <div className="flex items-center gap-1.5 mt-0.5">
               <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <span className="text-xs font-semibold text-emerald-400 font-mono">
+              <span className="text-xs font-mono font-medium text-emerald-400">
                 {data.vintageStats.availabilityStatus}
               </span>
             </div>
@@ -261,31 +255,30 @@ export const ForecastExplorerPage: React.FC = () => {
         </div>
       )}
 
-      {/* MAIN CHART: Forecast Profile across Selected Delivery Day */}
+      {/* FORECAST TRAJECTORY CHART */}
       {data && (
-        <div className="p-4 sm:p-6 rounded-2xl bg-wind-card border border-wind-border shadow-card space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="p-4 sm:p-5 rounded-xl bg-[#111620] border border-[#1E2638] shadow-card space-y-3.5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <div>
-              <h3 className="text-sm sm:text-base font-bold text-wind-textPrimary">
+              <h3 className="text-xs font-semibold text-slate-200 uppercase tracking-wider font-mono">
                 Wind Generation Forecast: {data.selectedDeliveryDate}
               </h3>
-              <p className="text-xs text-wind-textSecondary">
-                Eligible forecast generation trajectory across 24 delivery hours (MW)
+              <p className="text-[11px] text-slate-400">
+                Selected model run forecast profile across 24 delivery hours (MW)
               </p>
             </div>
 
-            {/* Line Toggles */}
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setShowForecastLine(!showForecastLine)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all active:scale-95 ${
+                className={`flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-medium transition-colors ${
                   showForecastLine
-                    ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
-                    : 'text-wind-textSecondary opacity-60'
+                    ? 'bg-sky-500/15 text-sky-300 border border-sky-500/30'
+                    : 'text-slate-500 opacity-60'
                 }`}
               >
-                <span className="w-2 h-2 rounded-full bg-sky-400" />
+                <span className="w-2 h-2 rounded-xs bg-sky-400" />
                 <span>Forecast</span>
                 {showForecastLine ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
               </button>
@@ -293,13 +286,13 @@ export const ForecastExplorerPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowActualLine(!showActualLine)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all active:scale-95 ${
+                className={`flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-medium transition-colors ${
                   showActualLine
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                    : 'text-wind-textSecondary opacity-60'
+                    ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                    : 'text-slate-500 opacity-60'
                 }`}
               >
-                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span className="w-2 h-2 rounded-xs bg-emerald-400" />
                 <span>Actual</span>
                 {showActualLine ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
               </button>
@@ -319,7 +312,7 @@ export const ForecastExplorerPage: React.FC = () => {
                 }))}
                 margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#1E2D44" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#1A2333" vertical={false} />
                 <XAxis dataKey="time" stroke="#64748B" fontSize={10} tickLine={false} />
                 <YAxis
                   stroke="#64748B"
@@ -334,29 +327,29 @@ export const ForecastExplorerPage: React.FC = () => {
                     if (active && payload && payload.length) {
                       const item = payload[0].payload;
                       return (
-                        <div className="p-3 rounded-xl bg-wind-card border border-wind-border shadow-2xl text-xs space-y-1 min-w-[190px]">
-                          <p className="font-bold text-wind-textPrimary border-b border-wind-border/60 pb-1">
+                        <div className="p-3 rounded-lg bg-[#111620] border border-[#1E2638] shadow-dropdown text-xs space-y-1 min-w-[190px]">
+                          <p className="font-mono font-bold text-white border-b border-[#1E2638] pb-1">
                             Delivery Hour: {label}
                           </p>
                           {showForecastLine && (
-                            <div className="text-wind-accentBlue flex justify-between">
+                            <div className="text-sky-400 flex justify-between">
                               <span>Forecast MW:</span>
                               <span className="font-mono font-bold">{item.forecast ? `${Math.round(item.forecast).toLocaleString()} MW` : 'N/A'}</span>
                             </div>
                           )}
                           {showActualLine && (
-                            <div className="text-wind-accent flex justify-between">
+                            <div className="text-emerald-400 flex justify-between">
                               <span>Actual MW:</span>
                               <span className="font-mono font-bold">{item.actual ? `${Math.round(item.actual).toLocaleString()} MW` : 'N/A'}</span>
                             </div>
                           )}
                           {item.error !== null && (
-                            <div className="text-amber-400 flex justify-between font-bold pt-1 border-t border-wind-border/40">
+                            <div className="text-amber-400 flex justify-between font-bold pt-1 border-t border-[#1E2638]">
                               <span>Error:</span>
                               <span className="font-mono">{item.error > 0 ? `+${Math.round(item.error)}` : Math.round(item.error)} MW</span>
                             </div>
                           )}
-                          <div className="text-[10px] text-wind-textSecondary pt-0.5">
+                          <div className="text-[10px] text-slate-500 font-mono pt-0.5">
                             Published: {item.publishTimeLocal || '—'}
                           </div>
                         </div>
@@ -370,10 +363,9 @@ export const ForecastExplorerPage: React.FC = () => {
                     type="monotone"
                     dataKey="forecast"
                     name="Selected Forecast (WINDFOR)"
-                    stroke="#38BDF8"
-                    strokeWidth={2.5}
-                    dot={{ r: 3, fill: '#38BDF8' }}
-                    activeDot={{ r: 6 }}
+                    stroke="#0284C7"
+                    strokeWidth={2}
+                    dot={{ r: 2.5, fill: '#0284C7' }}
                   />
                 )}
                 {showActualLine && (
@@ -381,10 +373,10 @@ export const ForecastExplorerPage: React.FC = () => {
                     type="monotone"
                     dataKey="actual"
                     name="Actual Outturn (FUELHH)"
-                    stroke="#35D399"
-                    strokeWidth={1.5}
+                    stroke="#10B981"
+                    strokeWidth={1.8}
                     strokeDasharray="3 3"
-                    dot={{ r: 2, fill: '#35D399' }}
+                    dot={{ r: 2, fill: '#10B981' }}
                   />
                 )}
               </LineChart>
@@ -393,47 +385,42 @@ export const ForecastExplorerPage: React.FC = () => {
         </div>
       )}
 
-      {/* DETAILED FORECAST INTERVALS TABLE */}
-      <div className="p-4 sm:p-6 rounded-2xl bg-wind-card border border-wind-border shadow-card space-y-4">
+      {/* TABLE AUDIT */}
+      <div className="p-4 rounded-xl bg-[#111620] border border-[#1E2638] shadow-card space-y-3.5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h3 className="text-sm sm:text-base font-bold text-wind-textPrimary">Delivery Interval Forecast Audit</h3>
-            <p className="text-xs text-wind-textSecondary">
-              Breakdown of delivery time vs publication time (Tap row for full details)
+            <h3 className="text-xs font-semibold text-slate-200 uppercase tracking-wider font-mono">
+              Delivery Hour Audit Breakdown
+            </h3>
+            <p className="text-[11px] text-slate-400">
+              Detailed intervals for {deliveryDate} (Click row to inspect record details)
             </p>
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <div className="relative w-full sm:w-60">
-              <Search className="w-3.5 h-3.5 text-wind-textSecondary absolute left-3 top-2.5" />
+          <div className="w-full sm:w-60">
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
               <input
                 type="text"
-                placeholder="Search intervals..."
+                placeholder="Search interval..."
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-wind-sidebar border border-wind-border text-xs text-wind-textPrimary placeholder:text-wind-textSecondary/50 focus:outline-none focus:border-wind-accent"
+                className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-[#0C1017] border border-[#1E2638] text-xs font-mono text-white placeholder:text-slate-600 focus:outline-none focus:border-teal-400"
               />
             </div>
           </div>
         </div>
 
-        {/* Mobile Swipe Hint */}
-        <div className="sm:hidden text-[11px] text-wind-textSecondary flex items-center justify-between px-1">
-          <span>Tap row to inspect</span>
-          <span className="font-mono text-wind-accent">Swipe left/right →</span>
-        </div>
-
-        {/* Data Table */}
-        <div className="overflow-x-auto rounded-xl border border-wind-border/80">
+        <div className="overflow-x-auto rounded-lg border border-[#1E2638]">
           <table className="w-full text-left text-xs whitespace-nowrap">
-            <thead className="bg-wind-sidebar/90 text-wind-textSecondary uppercase text-[10px] tracking-wider border-b border-wind-border font-semibold">
+            <thead className="bg-[#0C1017] text-slate-400 uppercase text-[10px] tracking-wider border-b border-[#1E2638] font-mono">
               <tr>
                 <th
                   onClick={() => handleSort('startTime')}
-                  className="py-3 px-4 cursor-pointer hover:text-wind-textPrimary transition-colors"
+                  className="py-2.5 px-3.5 cursor-pointer hover:text-white transition-colors"
                 >
                   <div className="flex items-center gap-1">
                     <span>Delivery Time</span>
@@ -442,16 +429,16 @@ export const ForecastExplorerPage: React.FC = () => {
                 </th>
                 <th
                   onClick={() => handleSort('publishTime')}
-                  className="py-3 px-4 cursor-pointer hover:text-wind-textPrimary transition-colors"
+                  className="py-2.5 px-3.5 cursor-pointer hover:text-white transition-colors"
                 >
                   <div className="flex items-center gap-1">
-                    <span>Publish Time (Vintage)</span>
+                    <span>Publish Vintage</span>
                     <ArrowUpDown className="w-3 h-3" />
                   </div>
                 </th>
                 <th
                   onClick={() => handleSort('forecastGeneration')}
-                  className="py-3 px-4 cursor-pointer hover:text-wind-textPrimary transition-colors text-right"
+                  className="py-2.5 px-3.5 cursor-pointer hover:text-white transition-colors text-right"
                 >
                   <div className="flex items-center justify-end gap-1">
                     <span>Forecast (MW)</span>
@@ -460,38 +447,38 @@ export const ForecastExplorerPage: React.FC = () => {
                 </th>
                 <th
                   onClick={() => handleSort('forecastAgeHours')}
-                  className="py-3 px-4 cursor-pointer hover:text-wind-textPrimary transition-colors text-right"
+                  className="py-2.5 px-3.5 cursor-pointer hover:text-white transition-colors text-right"
                 >
                   <div className="flex items-center justify-end gap-1">
-                    <span>Forecast Age</span>
+                    <span>Lead Age</span>
                     <ArrowUpDown className="w-3 h-3" />
                   </div>
                 </th>
-                <th className="py-3 px-4 text-center">Status</th>
+                <th className="py-2.5 px-3.5 text-center">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-wind-border/60">
+            <tbody className="divide-y divide-[#1E2638]/60 font-mono">
               {paginatedIntervals.length > 0 ? (
                 paginatedIntervals.map((row) => (
                   <tr
                     key={row.startTime}
                     onClick={() => setSelectedRow(row)}
-                    className="hover:bg-wind-cardSecondary/60 transition-colors cursor-pointer active:bg-wind-accent/10"
+                    className="hover:bg-[#161D2A] transition-colors cursor-pointer"
                   >
-                    <td className="py-2.5 px-4 font-mono font-medium text-wind-textPrimary">
+                    <td className="py-2 px-3.5 font-medium text-slate-200">
                       {row.deliveryTimeLocal}
                     </td>
-                    <td className="py-2.5 px-4 font-mono text-wind-textSecondary">
+                    <td className="py-2 px-3.5 text-slate-400">
                       {row.publishTimeLocal || '—'}
                     </td>
-                    <td className="py-2.5 px-4 text-right font-mono font-bold text-sky-400">
+                    <td className="py-2 px-3.5 text-right font-bold text-sky-400 tabular-nums">
                       {row.forecastGeneration ? `${Math.round(row.forecastGeneration).toLocaleString()} MW` : '—'}
                     </td>
-                    <td className="py-2.5 px-4 text-right font-mono text-wind-textSecondary">
+                    <td className="py-2 px-3.5 text-right text-slate-400 tabular-nums">
                       {row.forecastAgeHours !== null ? `${row.forecastAgeHours.toFixed(1)} hrs` : '—'}
                     </td>
-                    <td className="py-2.5 px-4 text-center">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <td className="py-2 px-3.5 text-center">
+                      <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                         Eligible
                       </span>
                     </td>
@@ -499,8 +486,8 @@ export const ForecastExplorerPage: React.FC = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-wind-textSecondary">
-                    No forecast intervals matched the criteria.
+                  <td colSpan={5} className="py-6 text-center text-slate-500">
+                    No forecast records match the criteria.
                   </td>
                 </tr>
               )}
@@ -508,82 +495,82 @@ export const ForecastExplorerPage: React.FC = () => {
           </table>
         </div>
 
-        {/* Pagination Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-wind-textSecondary pt-2">
+        {/* Pagination */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-slate-400 pt-1 font-mono">
           <span>
-            Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredIntervals.length)} of {filteredIntervals.length} intervals
+            {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredIntervals.length)} of {filteredIntervals.length} intervals
           </span>
-          <div className="flex items-center gap-1.5 self-center sm:self-auto">
+          <div className="flex items-center gap-1 self-center sm:self-auto">
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="p-2 rounded-xl bg-wind-sidebar border border-wind-border hover:border-wind-accent disabled:opacity-40 transition-colors active:scale-95"
+              className="p-1 rounded bg-[#0C1017] border border-[#1E2638] hover:border-slate-500 disabled:opacity-30 transition-colors"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3.5 h-3.5" />
             </button>
-            <span className="px-3 py-1 font-mono text-wind-textPrimary font-semibold">
+            <span className="px-2 py-0.5 text-white">
               {currentPage} / {totalPages}
             </span>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="p-2 rounded-xl bg-wind-sidebar border border-wind-border hover:border-wind-accent disabled:opacity-40 transition-colors active:scale-95"
+              className="p-1 rounded bg-[#0C1017] border border-[#1E2638] hover:border-slate-500 disabled:opacity-30 transition-colors"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Row Inspection Modal / Popover on tap */}
+      {/* Row Modal */}
       {selectedRow && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-wind-card border border-wind-border rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between pb-2 border-b border-wind-border">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#111620] border border-[#1E2638] rounded-xl max-w-md w-full p-4 space-y-3.5 shadow-dropdown">
+            <div className="flex items-center justify-between pb-2 border-b border-[#1E2638]">
               <div className="flex items-center gap-2">
-                <Compass className="w-4 h-4 text-wind-accent" />
-                <h4 className="text-sm font-bold text-wind-textPrimary">Interval Inspection</h4>
+                <Compass className="w-4 h-4 text-teal-400" />
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Interval Audit Record</h4>
               </div>
               <button
                 onClick={() => setSelectedRow(null)}
-                className="p-1 rounded-lg text-wind-textSecondary hover:text-wind-textPrimary hover:bg-wind-cardSecondary"
+                className="p-1 rounded text-slate-400 hover:text-white hover:bg-[#161D2A]"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-2.5 text-xs">
-              <div className="flex justify-between py-1 border-b border-wind-border/40">
-                <span className="text-wind-textSecondary">Delivery Time (Local):</span>
-                <span className="font-mono font-bold text-wind-textPrimary">{selectedRow.deliveryTimeLocal}</span>
+            <div className="space-y-2 text-xs font-mono">
+              <div className="flex justify-between py-1 border-b border-[#1E2638]">
+                <span className="text-slate-400">Delivery Interval:</span>
+                <span className="text-white font-bold">{selectedRow.deliveryTimeLocal}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-wind-border/40">
-                <span className="text-wind-textSecondary">Publish Vintage (Local):</span>
-                <span className="font-mono text-wind-accent">{selectedRow.publishTimeLocal || '—'}</span>
+              <div className="flex justify-between py-1 border-b border-[#1E2638]">
+                <span className="text-slate-400">Publication Time:</span>
+                <span className="text-teal-400">{selectedRow.publishTimeLocal || '—'}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-wind-border/40">
-                <span className="text-wind-textSecondary">Forecast Generation:</span>
-                <span className="font-mono font-bold text-sky-400">
+              <div className="flex justify-between py-1 border-b border-[#1E2638]">
+                <span className="text-slate-400">Forecast MW:</span>
+                <span className="font-bold text-sky-400">
                   {selectedRow.forecastGeneration ? `${Math.round(selectedRow.forecastGeneration).toLocaleString()} MW` : '—'}
                 </span>
               </div>
-              <div className="flex justify-between py-1 border-b border-wind-border/40">
-                <span className="text-wind-textSecondary">Actual Outturn:</span>
-                <span className="font-mono font-bold text-emerald-400">
+              <div className="flex justify-between py-1 border-b border-[#1E2638]">
+                <span className="text-slate-400">Actual Outturn:</span>
+                <span className="font-bold text-emerald-400">
                   {selectedRow.actualGeneration ? `${Math.round(selectedRow.actualGeneration).toLocaleString()} MW` : '—'}
                 </span>
               </div>
               {selectedRow.error !== null && (
-                <div className="flex justify-between py-1 border-b border-wind-border/40">
-                  <span className="text-wind-textSecondary">Deviation / Error:</span>
-                  <span className={`font-mono font-bold ${selectedRow.error > 0 ? 'text-amber-400' : 'text-sky-400'}`}>
+                <div className="flex justify-between py-1 border-b border-[#1E2638]">
+                  <span className="text-slate-400">Forecast Error:</span>
+                  <span className={`font-bold ${selectedRow.error > 0 ? 'text-amber-400' : 'text-sky-400'}`}>
                     {selectedRow.error > 0 ? `+${Math.round(selectedRow.error)}` : Math.round(selectedRow.error)} MW
                   </span>
                 </div>
               )}
               <div className="flex justify-between py-1">
-                <span className="text-wind-textSecondary">Forecast Lead Age:</span>
-                <span className="font-mono text-wind-textPrimary">
+                <span className="text-slate-400">Forecast Lead Age:</span>
+                <span className="text-slate-200">
                   {selectedRow.forecastAgeHours !== null ? `${selectedRow.forecastAgeHours.toFixed(1)} hours before delivery` : '—'}
                 </span>
               </div>
@@ -591,9 +578,9 @@ export const ForecastExplorerPage: React.FC = () => {
 
             <button
               onClick={() => setSelectedRow(null)}
-              className="w-full py-2 rounded-xl bg-wind-accent text-slate-900 font-bold text-xs hover:bg-wind-accent/90 transition-colors shadow-glow-green"
+              className="w-full py-2 rounded-lg bg-[#161D2A] hover:bg-[#1C2536] border border-[#2A364E] text-slate-200 font-mono text-xs transition-colors"
             >
-              Close Inspection
+              Close
             </button>
           </div>
         </div>

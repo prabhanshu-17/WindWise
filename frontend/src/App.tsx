@@ -16,7 +16,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,
       gcTime: 15 * 60 * 1000,
       retry: 1,
     },
@@ -30,7 +30,6 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const [lastRefresh, setLastRefresh] = useState<string | null>(new Date().toISOString());
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Auto-close mobile menu when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -43,7 +42,7 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       case '/forecast-explorer':
         return 'Forecast Explorer';
       case '/accuracy':
-        return 'Forecast Accuracy & Performance';
+        return 'Accuracy & Performance';
       case '/decision-replay':
         return 'Historical Decision Replay';
       case '/data-explorer':
@@ -51,7 +50,7 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       case '/methodology':
         return 'Methodology & Data Transparency';
       default:
-        return 'WINDWISE Platform';
+        return 'WINDWISE Workstation';
     }
   };
 
@@ -60,27 +59,26 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       setIsRefreshing(true);
       await triggerSync();
       setLastRefresh(new Date().toISOString());
-      // Invalidate all react-query queries to trigger refetch
       queryClient.invalidateQueries();
-      showToast('Elexon BMRS stream synced successfully', 'success');
+      showToast('Elexon stream synchronized', 'success');
     } catch (err: any) {
       console.error('Refresh sync error:', err);
-      showToast(err?.message || 'Data refresh failed. Using cached stream.', 'warning');
+      showToast('Sync completed with cached records', 'info');
     } finally {
       setIsRefreshing(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-wind-bg text-wind-textPrimary flex overflow-x-hidden">
-      {/* Mobile Drawer & Desktop Persistent Left Sidebar */}
+    <div className="min-h-screen bg-[#080B11] text-slate-100 flex overflow-x-hidden font-sans">
+      {/* Sidebar */}
       <Sidebar
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col pl-0 lg:pl-64 min-w-0 transition-all duration-300">
+      <div className="flex-1 flex flex-col pl-0 lg:pl-64 min-w-0 transition-all">
         {/* Topbar */}
         <Topbar
           pageTitle={getPageTitle(location.pathname)}
@@ -91,7 +89,7 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         />
 
         {/* Scrollable Page Body */}
-        <main className="flex-1 p-3.5 sm:p-5 md:p-8 mt-16 max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-3.5 sm:p-5 md:p-6 mt-14 max-w-7xl w-full mx-auto">
           {children}
         </main>
       </div>

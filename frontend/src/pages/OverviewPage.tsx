@@ -42,10 +42,10 @@ export const OverviewPage: React.FC = () => {
   const [data, setData] = useState<OverviewData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedRange, setSelectedRange] = useState<string>('all'); // 'all', 'w1', 'w2', 'w3', 'w4'
+  const [selectedRange, setSelectedRange] = useState<string>('all');
   const [selectedDay, setSelectedDay] = useState<string | undefined>(undefined);
 
-  // Interactive Series Visibility Toggles
+  // Line visibility toggles
   const [showActual, setShowActual] = useState<boolean>(true);
   const [showForecast, setShowForecast] = useState<boolean>(true);
 
@@ -70,7 +70,7 @@ export const OverviewPage: React.FC = () => {
   if (loading) return <LoadingSkeleton />;
   if (error || !data) return <ErrorState message={error || undefined} onRetry={loadData} />;
 
-  // Filter timeSeries based on selectedRange or selectedDay
+  // Filter series based on selectedRange or selectedDay
   let displaySeries = data.timeSeries;
   if (selectedDay) {
     displaySeries = data.timeSeries.filter((d) => d.startTime.startsWith(selectedDay));
@@ -84,7 +84,6 @@ export const OverviewPage: React.FC = () => {
     displaySeries = data.timeSeries.filter((d) => d.startTime >= '2026-01-22' && d.startTime <= '2026-02-01T00:00:00Z');
   }
 
-  // Format series for chart
   const chartData = displaySeries.map((item) => ({
     time: item.deliveryTimeLocal.replace('2026-01-', 'Jan ').replace('2026-02-01', 'Feb 1'),
     actual: item.actualGeneration,
@@ -108,17 +107,16 @@ export const OverviewPage: React.FC = () => {
       w3: 'Week 3 (Jan 15–21)',
       w4: 'Week 4 (Jan 22–31)',
     };
-    showToast(`Filtered to ${rangeLabels[range] || range}`, 'info');
+    showToast(`Window: ${rangeLabels[range] || range}`, 'info');
   };
 
   const handleDaySelect = (day: string) => {
     if (selectedDay === day) {
       setSelectedDay(undefined);
-      showToast('Cleared day filter', 'info');
+      showToast('Cleared date slice', 'info');
     } else {
       setSelectedDay(day);
-      showToast(`Zoomed chart to ${day}`, 'info');
-      // Smooth scroll towards the main chart
+      showToast(`Selected ${day}`, 'info');
       const chartEl = document.getElementById('main-generation-chart');
       if (chartEl) {
         chartEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -127,148 +125,147 @@ export const OverviewPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-fadeIn">
-      {/* Header & Filter Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 pb-2 border-b border-wind-border">
+    <div className="space-y-5 sm:space-y-6 animate-fadeIn">
+      {/* Header & Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#1E2638]">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-wind-textPrimary tracking-tight">
-            Wind Intelligence Overview
-          </h1>
-          <p className="text-xs text-wind-textSecondary mt-0.5 sm:mt-1">
-            Monitor renewable generation forecasts and understand forecast reliability for UK electricity procurement.
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight font-sans">
+              UK Wind Generation & Day-Ahead Reliability
+            </h1>
+            <span className="hidden sm:inline-block px-2 py-0.5 rounded text-[10px] font-mono bg-white/[0.05] text-slate-400 border border-white/[0.08]">
+              ELEXON BMRS
+            </span>
+          </div>
+          <p className="text-xs text-slate-400 mt-0.5">
+            National Grid ESO wind forecasts vs. outturn generation delivery across Great Britain (January 1–31, 2026)
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Target Month Pill */}
-          <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-wind-card border border-wind-border text-xs">
-            <Calendar className="w-3.5 h-3.5 text-wind-accent shrink-0" />
-            <span className="text-wind-textSecondary hidden sm:inline">Target:</span>
-            <span className="font-semibold text-wind-textPrimary font-mono">January 2026</span>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {/* Target Month Indicator */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#111620] border border-[#1E2638] text-xs font-mono">
+            <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <span className="text-slate-400">Target:</span>
+            <span className="font-semibold text-slate-200">JAN 2026</span>
           </div>
 
-          {/* CSV Export Button */}
+          {/* Export CSV */}
           <a
             href={getExportUrl('accuracy', '2026-01')}
             download="windwise_accuracy_2026-01.csv"
-            onClick={() => showToast('Downloading January 2026 accuracy CSV...', 'info')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-wind-card hover:bg-wind-cardSecondary border border-wind-border hover:border-wind-accent/40 text-xs font-semibold text-wind-textPrimary transition-all shadow-sm active:scale-95"
+            onClick={() => showToast('Exporting accuracy data...', 'info')}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#161D2A] hover:bg-[#1E2638] border border-[#2A364E] text-xs font-medium text-slate-200 transition-colors shadow-xs"
           >
-            <Download className="w-3.5 h-3.5 text-wind-accent" />
+            <Download className="w-3.5 h-3.5 text-teal-400" />
             <span>Export CSV</span>
           </a>
         </div>
       </div>
 
       {/* TOP 5 KPI CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-        {/* 1. Average Actual Wind Generation */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <KPICard
-          title="Avg Actual Generation"
+          title="Avg Actual"
           value={data.kpis.avgActualGeneration ? Math.round(data.kpis.avgActualGeneration).toLocaleString() : '—'}
           unit="MW"
-          explanation="Average actual wind generation across all evaluated intervals."
-          formulaTooltip="Calculated as Sum(Actual Generation MW) / Matched Intervals from Elexon FUELHH (fuelType=WIND)."
+          explanation="Mean outturn wind generation across evaluated settlement hours."
+          formulaTooltip="Sum(Actual Generation MW) / Matched Intervals from Elexon FUELHH (WIND)."
           icon={Zap}
           highlightColor="green"
-          badge={{ label: 'Actuals', variant: 'positive' }}
+          badge={{ label: 'FUELHH', variant: 'positive' }}
         />
 
-        {/* 2. Average Forecast Generation */}
         <KPICard
-          title="Avg Forecast Generation"
+          title="Avg Forecast"
           value={data.kpis.avgForecastGeneration ? Math.round(data.kpis.avgForecastGeneration).toLocaleString() : '—'}
           unit="MW"
-          explanation="Average selected wind generation forecast across all evaluated intervals."
-          formulaTooltip="Calculated as Sum(Selected Forecast MW) / Matched Intervals from Elexon WINDFOR dataset."
+          explanation="Mean Day-Ahead forecast across evaluated settlement hours."
+          formulaTooltip="Sum(Selected Forecast MW) / Matched Intervals from Elexon WINDFOR."
           icon={Wind}
           highlightColor="blue"
           badge={{ label: 'WINDFOR', variant: 'accent' }}
         />
 
-        {/* 3. Mean Absolute Error (MAE) */}
         <KPICard
           title="Mean Absolute Error"
           value={data.kpis.mae ? Math.round(data.kpis.mae).toLocaleString() : '—'}
           unit="MW"
-          explanation="Average magnitude of forecasting errors irrespective of direction."
-          formulaTooltip="MAE = Mean(|Forecast - Actual|). Measures average forecast dispersion in megawatts."
+          explanation="Average forecast deviation magnitude across delivery periods."
+          formulaTooltip="MAE = (1/N) * Σ |Forecast - Actual|. Standard dispersion metric."
           icon={Activity}
           highlightColor="amber"
-          badge={{ label: 'Dispersion', variant: 'neutral' }}
+          badge={{ label: 'MAE', variant: 'neutral' }}
         />
 
-        {/* 4. Forecast Bias (MBE) */}
         <KPICard
-          title="Forecast Bias"
+          title="Forecast Bias (MBE)"
           value={mbe > 0 ? `+${Math.round(mbe).toLocaleString()}` : Math.round(mbe).toLocaleString()}
           unit="MW"
           explanation={isOverforecast ? 'Positive bias: Generation was overforecast on average.' : 'Negative bias: Generation was underforecast on average.'}
-          formulaTooltip="Mean Bias Error (MBE) = Mean(Forecast - Actual). Positive indicates systemic overforecasting; negative indicates underforecasting."
+          formulaTooltip="Mean Bias Error = (1/N) * Σ (Forecast - Actual). Positive = Overforecast, Negative = Underforecast."
           icon={Gauge}
           highlightColor={isOverforecast ? 'amber' : 'blue'}
           badge={{
-            label: isOverforecast ? 'Overforecasting' : 'Underforecasting',
+            label: isOverforecast ? '+ Bias' : '- Bias',
             variant: isOverforecast ? 'negative' : 'accent'
           }}
         />
 
-        {/* 5. Forecast Coverage */}
         <KPICard
-          title="Forecast Coverage"
+          title="Interval Coverage"
           value={data.kpis.coverage ? data.kpis.coverage.toFixed(1) : '0.0'}
           unit="%"
           explanation={`${data.kpis.matchedIntervals} of ${data.kpis.expectedIntervals} expected settlement hours matched.`}
-          formulaTooltip="Coverage = (Matched Intervals / Expected 744 January Hours) × 100. Evaluates data completeness."
+          formulaTooltip="(Matched Intervals / 744 Expected Intervals) * 100. 100% complete dataset."
           icon={Percent}
           highlightColor="green"
-          badge={{ label: '744/744 Hrs', variant: 'positive' }}
+          badge={{ label: '744/744', variant: 'positive' }}
         />
       </div>
 
       {/* MAIN CHART: Wind Generation: Forecast vs Actual */}
-      <div id="main-generation-chart" className="p-4 sm:p-6 rounded-2xl bg-wind-card border border-wind-border shadow-card space-y-4">
-        {/* Controls and Title */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div id="main-generation-chart" className="p-4 sm:p-5 rounded-xl bg-[#111620] border border-[#1E2638] shadow-card space-y-3.5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-sm sm:text-base font-bold text-wind-textPrimary">
-                Wind Generation: Forecast vs Actual
+              <h2 className="text-sm font-semibold text-white tracking-tight">
+                GB Wind Generation: Outturn vs. Day-Ahead Forecast Trajectory
               </h2>
               {selectedDay && (
-                <span className="text-xs font-mono px-2 py-0.5 rounded-lg bg-wind-accent/15 text-wind-accent border border-wind-accent/30 flex items-center gap-1.5">
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-teal-500/10 text-teal-300 border border-teal-500/30 flex items-center gap-1.5">
                   <Filter className="w-3 h-3" />
                   <span>Filtered: {selectedDay}</span>
                   <button
                     onClick={() => setSelectedDay(undefined)}
-                    className="hover:text-white font-bold ml-1 p-0.5 rounded hover:bg-wind-cardSecondary"
-                    title="Clear day filter"
+                    className="hover:text-white p-0.5 rounded"
+                    title="Clear filter"
                   >
                     <X className="w-3 h-3" />
                   </button>
                 </span>
               )}
             </div>
-            <p className="text-xs text-wind-textSecondary mt-0.5">
-              Interactive half-hourly/hourly generation trajectory comparison across UK delivery periods (MW)
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Hourly delivery periods comparing outturn (FUELHH) against Day-Ahead forecast runs (WINDFOR) in MW
             </p>
           </div>
 
-          {/* Interactive Series & Zoom Controls Container */}
+          {/* Controls Container */}
           <div className="flex flex-wrap items-center gap-2">
-            {/* Interactive Series Visibility Toggles */}
-            <div className="flex items-center gap-1.5 bg-wind-sidebar p-1 rounded-xl border border-wind-border text-xs">
+            {/* Series Toggles */}
+            <div className="flex items-center gap-1 bg-[#0C1017] p-1 rounded-lg border border-[#1E2638] text-xs">
               <button
                 type="button"
                 onClick={() => setShowActual(!showActual)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-medium transition-all active:scale-95 ${
+                className={`flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-medium transition-colors ${
                   showActual
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
-                    : 'text-wind-textSecondary hover:text-wind-textPrimary opacity-60'
+                    ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                    : 'text-slate-500 opacity-60'
                 }`}
                 title="Toggle Actual Line"
               >
-                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span className="w-2 h-2 rounded-xs bg-emerald-400" />
                 <span>Actual</span>
                 {showActual ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
               </button>
@@ -276,86 +273,55 @@ export const OverviewPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowForecast(!showForecast)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-medium transition-all active:scale-95 ${
+                className={`flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-medium transition-colors ${
                   showForecast
-                    ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-sm'
-                    : 'text-wind-textSecondary hover:text-wind-textPrimary opacity-60'
+                    ? 'bg-sky-500/15 text-sky-300 border border-sky-500/30'
+                    : 'text-slate-500 opacity-60'
                 }`}
                 title="Toggle Forecast Line"
               >
-                <span className="w-2 h-2 rounded-full bg-sky-400" />
+                <span className="w-2 h-2 rounded-xs bg-sky-400" />
                 <span>Forecast</span>
                 {showForecast ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
               </button>
             </div>
 
-            {/* Time Zoom Controls with horizontal mobile scrolling */}
-            <div className="flex items-center gap-1 bg-wind-sidebar p-1 rounded-xl border border-wind-border text-xs overflow-x-auto max-w-full">
-              <button
-                onClick={() => handleRangeChange('all')}
-                className={`px-2.5 sm:px-3 py-1 rounded-lg font-medium transition-all shrink-0 active:scale-95 ${
-                  selectedRange === 'all' && !selectedDay
-                    ? 'bg-wind-cardSecondary text-wind-accent shadow-sm border border-wind-accent/30 font-semibold'
-                    : 'text-wind-textSecondary hover:text-wind-textPrimary'
-                }`}
-              >
-                Full Month
-              </button>
-              <button
-                onClick={() => handleRangeChange('w1')}
-                className={`px-2.5 sm:px-3 py-1 rounded-lg font-medium transition-all shrink-0 active:scale-95 ${
-                  selectedRange === 'w1'
-                    ? 'bg-wind-cardSecondary text-wind-accent shadow-sm border border-wind-accent/30 font-semibold'
-                    : 'text-wind-textSecondary hover:text-wind-textPrimary'
-                }`}
-              >
-                Jan 1–7
-              </button>
-              <button
-                onClick={() => handleRangeChange('w2')}
-                className={`px-2.5 sm:px-3 py-1 rounded-lg font-medium transition-all shrink-0 active:scale-95 ${
-                  selectedRange === 'w2'
-                    ? 'bg-wind-cardSecondary text-wind-accent shadow-sm border border-wind-accent/30 font-semibold'
-                    : 'text-wind-textSecondary hover:text-wind-textPrimary'
-                }`}
-              >
-                Jan 8–14
-              </button>
-              <button
-                onClick={() => handleRangeChange('w3')}
-                className={`px-2.5 sm:px-3 py-1 rounded-lg font-medium transition-all shrink-0 active:scale-95 ${
-                  selectedRange === 'w3'
-                    ? 'bg-wind-cardSecondary text-wind-accent shadow-sm border border-wind-accent/30 font-semibold'
-                    : 'text-wind-textSecondary hover:text-wind-textPrimary'
-                }`}
-              >
-                Jan 15–21
-              </button>
-              <button
-                onClick={() => handleRangeChange('w4')}
-                className={`px-2.5 sm:px-3 py-1 rounded-lg font-medium transition-all shrink-0 active:scale-95 ${
-                  selectedRange === 'w4'
-                    ? 'bg-wind-cardSecondary text-wind-accent shadow-sm border border-wind-accent/30 font-semibold'
-                    : 'text-wind-textSecondary hover:text-wind-textPrimary'
-                }`}
-              >
-                Jan 22–31
-              </button>
+            {/* Time Window Buttons */}
+            <div className="flex items-center gap-1 bg-[#0C1017] p-1 rounded-lg border border-[#1E2638] text-xs overflow-x-auto max-w-full">
+              {[
+                { key: 'all', label: 'Full Month' },
+                { key: 'w1', label: 'Jan 1–7' },
+                { key: 'w2', label: 'Jan 8–14' },
+                { key: 'w3', label: 'Jan 15–21' },
+                { key: 'w4', label: 'Jan 22–31' },
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => handleRangeChange(tab.key)}
+                  className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors shrink-0 ${
+                    selectedRange === tab.key && !selectedDay
+                      ? 'bg-[#1C2536] text-white font-semibold border border-[#2A364E]'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
         {/* Recharts Main Time Series */}
-        <div className="h-72 sm:h-96 w-full">
+        <div className="h-72 sm:h-88 w-full pt-1">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1E2D44" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#1A2333" vertical={false} />
               <XAxis
                 dataKey="time"
                 stroke="#64748B"
                 fontSize={10}
                 tickLine={false}
-                minTickGap={25}
+                minTickGap={30}
               />
               <YAxis
                 stroke="#64748B"
@@ -372,24 +338,24 @@ export const OverviewPage: React.FC = () => {
                     const err = dataPoint.error;
                     const errSign = err !== null && err > 0 ? '+' : '';
                     return (
-                      <div className="p-3 rounded-xl bg-wind-card border border-wind-border shadow-2xl text-xs space-y-1.5 min-w-[200px] max-w-[calc(100vw-3rem)]">
-                        <p className="font-bold text-wind-textPrimary pb-1 border-b border-wind-border/60">
+                      <div className="p-3 rounded-lg bg-[#111620] border border-[#1E2638] shadow-dropdown text-xs space-y-1.5 min-w-[200px]">
+                        <p className="font-mono font-bold text-white pb-1 border-b border-[#1E2638]">
                           {label} (UK Local)
                         </p>
                         {showActual && (
-                          <div className="flex items-center justify-between text-wind-accent font-semibold">
+                          <div className="flex items-center justify-between text-emerald-400 font-medium">
                             <span>Actual Generation:</span>
                             <span className="font-mono">{dataPoint.actual ? `${Math.round(dataPoint.actual).toLocaleString()} MW` : 'N/A'}</span>
                           </div>
                         )}
                         {showForecast && (
-                          <div className="flex items-center justify-between text-wind-accentBlue font-semibold">
+                          <div className="flex items-center justify-between text-sky-400 font-medium">
                             <span>Forecast (WINDFOR):</span>
                             <span className="font-mono">{dataPoint.forecast ? `${Math.round(dataPoint.forecast).toLocaleString()} MW` : 'N/A'}</span>
                           </div>
                         )}
                         {err !== null && (
-                          <div className={`flex items-center justify-between font-bold pt-1 border-t border-wind-border/40 ${
+                          <div className={`flex items-center justify-between font-bold pt-1 border-t border-[#1E2638] ${
                             err > 0 ? 'text-amber-400' : 'text-sky-400'
                           }`}>
                             <span>Forecast Error:</span>
@@ -397,8 +363,8 @@ export const OverviewPage: React.FC = () => {
                           </div>
                         )}
                         {dataPoint.age !== null && (
-                          <div className="text-[10px] text-wind-textSecondary pt-0.5">
-                            Vintage: {dataPoint.pubLocal || 'N/A'} ({dataPoint.age}h lead)
+                          <div className="text-[10px] text-slate-500 font-mono pt-0.5">
+                            Vintage: {dataPoint.pubLocal || '—'} ({dataPoint.age}h lead)
                           </div>
                         )}
                       </div>
@@ -410,30 +376,30 @@ export const OverviewPage: React.FC = () => {
               <Legend
                 verticalAlign="top"
                 align="right"
-                wrapperStyle={{ paddingBottom: '12px', fontSize: '11px' }}
-                iconType="circle"
+                wrapperStyle={{ paddingBottom: '8px', fontSize: '11px', fontFamily: 'JetBrains Mono' }}
+                iconType="plainline"
               />
               {showActual && (
                 <Line
                   type="monotone"
                   dataKey="actual"
-                  name="Actual Wind Generation (FUELHH)"
-                  stroke="#35D399"
+                  name="Actual (FUELHH)"
+                  stroke="#10B981"
                   strokeWidth={2}
                   dot={false}
-                  activeDot={{ r: 5, fill: '#35D399' }}
+                  activeDot={{ r: 4, fill: '#10B981' }}
                 />
               )}
               {showForecast && (
                 <Line
                   type="monotone"
                   dataKey="forecast"
-                  name="Forecast Generation (WINDFOR)"
-                  stroke="#38BDF8"
-                  strokeWidth={2}
+                  name="Forecast (WINDFOR)"
+                  stroke="#0284C7"
+                  strokeWidth={1.8}
                   strokeDasharray="4 4"
                   dot={false}
-                  activeDot={{ r: 5, fill: '#38BDF8' }}
+                  activeDot={{ r: 4, fill: '#0284C7' }}
                 />
               )}
             </LineChart>
@@ -442,22 +408,24 @@ export const OverviewPage: React.FC = () => {
       </div>
 
       {/* SECONDARY VISUALIZATIONS SECTION */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* A. Daily Wind Generation Bar Chart */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-wind-card border border-wind-border shadow-card">
-          <div className="flex items-center justify-between mb-4">
+        <div className="p-4 rounded-xl bg-[#111620] border border-[#1E2638] shadow-card">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-sm font-bold text-wind-textPrimary">Daily Wind Generation (Avg MW)</h3>
-              <p className="text-xs text-wind-textSecondary">Comparing daily mean actual vs forecast delivery</p>
+              <h3 className="text-xs font-semibold text-slate-200 uppercase tracking-wider font-mono">
+                Daily Mean Generation (Actual vs. Forecast MW)
+              </h3>
+              <p className="text-[11px] text-slate-400">Comparing daily 24-hour mean volumes across January</p>
             </div>
-            <span className="text-[11px] font-mono text-wind-textSecondary bg-wind-sidebar px-2 py-0.5 rounded border border-wind-border">
+            <span className="text-[10px] font-mono text-slate-500 bg-[#0C1017] px-2 py-0.5 rounded border border-[#1E2638]">
               31 Days
             </span>
           </div>
-          <div className="h-60 sm:h-64 w-full">
+          <div className="h-60 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.dailyData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1E2D44" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#1A2333" vertical={false} />
                 <XAxis
                   dataKey="date"
                   stroke="#64748B"
@@ -473,33 +441,35 @@ export const OverviewPage: React.FC = () => {
                   tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`}
                 />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#151F30', borderColor: '#263449', borderRadius: '10px' }}
-                  labelFormatter={(lbl) => `Delivery Day: ${lbl}`}
+                  contentStyle={{ backgroundColor: '#111620', borderColor: '#1E2638', borderRadius: '8px' }}
+                  labelFormatter={(lbl) => `Date: ${lbl}`}
                   formatter={(val: any) => [`${Math.round(val).toLocaleString()} MW`, '']}
                 />
-                <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: '11px', paddingBottom: '8px' }} />
-                <Bar dataKey="avgActual" name="Actual (Avg MW)" fill="#35D399" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="avgForecast" name="Forecast (Avg MW)" fill="#38BDF8" radius={[4, 4, 0, 0]} />
+                <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: '11px', paddingBottom: '6px', fontFamily: 'JetBrains Mono' }} />
+                <Bar dataKey="avgActual" name="Actual (Avg MW)" fill="#10B981" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="avgForecast" name="Forecast (Avg MW)" fill="#0284C7" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* B. Forecast Error Distribution Histogram */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-wind-card border border-wind-border shadow-card">
-          <div className="flex items-center justify-between mb-4">
+        <div className="p-4 rounded-xl bg-[#111620] border border-[#1E2638] shadow-card">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-sm font-bold text-wind-textPrimary">Forecast Error Distribution</h3>
-              <p className="text-xs text-wind-textSecondary">Histogram of forecast errors (Forecast - Actual MW)</p>
+              <h3 className="text-xs font-semibold text-slate-200 uppercase tracking-wider font-mono">
+                Forecast Error Distribution (MW Bins)
+              </h3>
+              <p className="text-[11px] text-slate-400">Frequency distribution of discrepancies (Forecast - Actual)</p>
             </div>
-            <span className="text-[11px] font-mono text-wind-textSecondary bg-wind-sidebar px-2 py-0.5 rounded border border-wind-border">
+            <span className="text-[10px] font-mono text-slate-500 bg-[#0C1017] px-2 py-0.5 rounded border border-[#1E2638]">
               {data.errorDistribution.length} Bins
             </span>
           </div>
-          <div className="h-60 sm:h-64 w-full">
+          <div className="h-60 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.errorDistribution} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1E2D44" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#1A2333" vertical={false} />
                 <XAxis
                   dataKey="binLabel"
                   stroke="#64748B"
@@ -518,28 +488,26 @@ export const OverviewPage: React.FC = () => {
                   unit="%"
                 />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#151F30', borderColor: '#263449', borderRadius: '10px' }}
+                  contentStyle={{ backgroundColor: '#111620', borderColor: '#1E2638', borderRadius: '8px' }}
                   formatter={(val: any, name: any, item: any) => [
                     `${item.payload.count} intervals (${val}%)`,
-                    `Range ${item.payload.binLabel} MW`
+                    `Range: ${item.payload.binLabel} MW`
                   ]}
                 />
                 <ReferenceLine x={0} stroke="#64748B" strokeDasharray="3 3" />
-                <Bar dataKey="percentage" name="% Frequency" fill="#FBBF24" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="percentage" name="% Frequency" fill="#F59E0B" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
       </div>
 
-      {/* C & D: Forecast Bias Indicator & Calendar Heatmap */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        {/* C. Bias Gauge */}
+      {/* Bias Gauge & Heatmap */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-1">
           <BiasGauge bias={data.biasIndicator} />
         </div>
 
-        {/* D. Calendar Heatmap */}
         <div className="lg:col-span-2">
           <CalendarHeatmap
             coverageDays={data.coverageHeatmap}
@@ -549,24 +517,24 @@ export const OverviewPage: React.FC = () => {
         </div>
       </div>
 
-      {/* BOTTOM SECTION: Procurement Intelligence */}
-      <div className="p-4 sm:p-6 rounded-2xl bg-wind-card border border-wind-border shadow-card space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      {/* Operational Summary & Desk Notes */}
+      <div className="p-4 sm:p-5 rounded-xl bg-[#111620] border border-[#1E2638] shadow-card space-y-3.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-2 border-b border-[#1E2638]">
           <div>
-            <h3 className="text-sm sm:text-base font-bold text-wind-textPrimary flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-wind-accent" />
-              Procurement Intelligence
+            <h3 className="text-xs font-semibold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+              <TrendingUp className="w-3.5 h-3.5 text-teal-400" />
+              Operational Desk Insights & Outturn Summary
             </h3>
-            <p className="text-xs text-wind-textSecondary">
-              Algorithmic insights derived dynamically from January 2026 Elexon settlement intervals
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Key statistical highlights computed directly across January 2026 Elexon settlement intervals
             </p>
           </div>
-          <span className="text-[10px] sm:text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 font-semibold self-start sm:self-auto">
-            Dynamic Analytical Synthesis
+          <span className="text-[10px] font-mono text-slate-400 bg-[#0C1017] px-2 py-0.5 rounded border border-[#1E2638] self-start sm:self-auto">
+            744 Settlement Hours Evaluated
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 pt-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
           {data.insights.map((insight) => (
             <InsightCard key={insight.id} insight={insight} />
           ))}

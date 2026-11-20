@@ -18,6 +18,13 @@ from app.data_processor import (
 
 logger = logging.getLogger(__name__)
 
+# In-memory analytics cache for instantaneous sub-millisecond responses
+_ANALYTICS_CACHE: Dict[str, Any] = {}
+
+def clear_cache():
+    global _ANALYTICS_CACHE
+    _ANALYTICS_CACHE.clear()
+
 def query_actuals(start_date: Optional[str] = None, end_date: Optional[str] = None) -> List[Dict[str, Any]]:
     if hasattr(start_date, "default"):
         start_date = getattr(start_date, "default", None)
@@ -120,6 +127,10 @@ def get_overview_data(month: Any = DEFAULT_MONTH, cutoff: Any = None) -> Dict[st
     if not isinstance(cutoff, str):
         cutoff = None
 
+    cache_key = f"overview_{month}_{cutoff}"
+    if cache_key in _ANALYTICS_CACHE:
+        return _ANALYTICS_CACHE[cache_key]
+
     start_bound = f"{month}-01T00:00:00Z"
     # Find last day of month
     year, m = map(int, month.split("-"))
@@ -170,7 +181,7 @@ def get_overview_data(month: Any = DEFAULT_MONTH, cutoff: Any = None) -> Dict[st
 
     last_sync = get_sync_metadata("last_full_sync") or get_sync_metadata("last_actuals_sync")
 
-    return {
+    res = {
         "kpis": kpis,
         "dailyData": daily,
         "errorDistribution": error_dist,
@@ -181,6 +192,8 @@ def get_overview_data(month: Any = DEFAULT_MONTH, cutoff: Any = None) -> Dict[st
         "lastSync": last_sync,
         "dataSourceStatus": "Connected (Elexon BMRS API)"
     }
+    _ANALYTICS_CACHE[cache_key] = res
+    return res
 
 def get_forecast_explorer_data(
     delivery_date: str,
@@ -248,6 +261,10 @@ def get_accuracy_analysis(month: Any = DEFAULT_MONTH, cutoff: Optional[str] = No
     if not isinstance(month, str) or "-" not in month:
         month = DEFAULT_MONTH
 
+    cache_key = f"accuracy_{month}_{cutoff}"
+    if cache_key in _ANALYTICS_CACHE:
+        return _ANALYTICS_CACHE[cache_key]
+
     overview = get_overview_data(month, cutoff)
     matched = overview["timeSeries"]
     daily = overview["dailyData"]
@@ -276,13 +293,15 @@ def get_accuracy_analysis(month: Any = DEFAULT_MONTH, cutoff: Optional[str] = No
             "count": len(errs)
         })
 
-    return {
+    res = {
         "metrics": kpis,
         "dailyMetrics": daily,
         "errorDistribution": error_dist,
         "diurnalProfile": diurnal_profile,
         "matchedRecords": [r for r in matched if r.get("isMatched")]
     }
+    _ANALYTICS_CACHE[cache_key] = res
+    return res
 
 def get_decision_replay(delivery_date: str, decision_cutoff: str) -> Dict[str, Any]:
     """
@@ -353,6 +372,10 @@ def get_data_quality_report(month: Any = DEFAULT_MONTH) -> Dict[str, Any]:
     if not isinstance(month, str) or "-" not in month:
         month = DEFAULT_MONTH
 
+    cache_key = f"quality_{month}"
+    if cache_key in _ANALYTICS_CACHE:
+        return _ANALYTICS_CACHE[cache_key]
+
     conn = get_connection()
     try:
         cur_act = conn.execute("SELECT COUNT(*) as cnt, MIN(start_time) as min_st, MAX(start_time) as max_st FROM actuals WHERE fuel_type = 'WIND'")
@@ -387,7 +410,7 @@ def get_data_quality_report(month: Any = DEFAULT_MONTH) -> Dict[str, Any]:
         matched = match_forecast_and_actuals(actuals, forecasts)
         kpis = calculate_accuracy_metrics(matched, expected_intervals=EXPECTED_JANUARY_HOURS)
 
-        return {
+        res = {
             "totalActualRecords": total_act,
             "totalForecastRecords": total_fc,
             "windActualRecords": wind_actuals_cnt,
@@ -408,6 +431,8 @@ def get_data_quality_report(month: Any = DEFAULT_MONTH) -> Dict[str, Any]:
                 "evaluationMonth": month
             }
         }
+        _ANALYTICS_CACHE[cache_key] = res
+        return res
     finally:
         conn.close()
 

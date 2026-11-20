@@ -11,12 +11,12 @@ export const BiasGauge: React.FC<BiasGaugeProps> = ({ bias }) => {
   const isUnder = bias.direction === 'underforecast';
 
   return (
-    <div className="p-5 rounded-2xl bg-wind-card border border-wind-border shadow-card flex flex-col justify-between">
+    <div className="p-4 sm:p-5 rounded-2xl bg-wind-card border border-wind-border shadow-card flex flex-col justify-between">
       <div>
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between gap-2 mb-2">
           <h3 className="text-sm font-bold text-wind-textPrimary">Systematic Forecast Bias</h3>
           <span
-            className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${
+            className={`text-[11px] sm:text-xs font-semibold px-2.5 py-0.5 rounded-full border shrink-0 ${
               isOver
                 ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
                 : isUnder
@@ -34,25 +34,25 @@ export const BiasGauge: React.FC<BiasGaugeProps> = ({ bias }) => {
         {/* Big Number */}
         <div className="flex items-center gap-3 mb-4">
           <div
-            className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+            className={`w-11 sm:w-12 h-11 sm:h-12 rounded-xl flex items-center justify-center shrink-0 ${
               isOver
                 ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
                 : 'bg-sky-500/15 text-sky-400 border border-sky-500/30'
             }`}
           >
             {isOver ? (
-              <TrendingUp className="w-6 h-6" />
+              <TrendingUp className="w-5 sm:w-6 h-5 sm:h-6" />
             ) : isUnder ? (
-              <TrendingDown className="w-6 h-6" />
+              <TrendingDown className="w-5 sm:w-6 h-5 sm:h-6" />
             ) : (
-              <Minus className="w-6 h-6 text-emerald-400" />
+              <Minus className="w-5 sm:w-6 h-5 sm:h-6 text-emerald-400" />
             )}
           </div>
-          <div>
-            <div className="text-2xl font-extrabold font-mono text-wind-textPrimary">
+          <div className="min-w-0">
+            <div className="text-xl sm:text-2xl font-extrabold font-mono text-wind-textPrimary truncate">
               {bias.mbe > 0 ? `+${bias.mbe.toLocaleString()} MW` : `${bias.mbe.toLocaleString()} MW`}
             </div>
-            <div className="text-[11px] text-wind-textSecondary">
+            <div className="text-[11px] text-wind-textSecondary truncate">
               {isOver
                 ? 'Forecast exceeds actual delivery on average'
                 : 'Actual generation exceeds forecast on average'}
@@ -95,4 +95,3 @@ export const BiasGauge: React.FC<BiasGaugeProps> = ({ bias }) => {
     </div>
   );
 };
-

@@ -8,7 +8,9 @@ import {
   Info,
   Sliders,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  Filter,
+  Sparkles
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -30,11 +32,16 @@ import { fetchAccuracy, getExportUrl } from '../services/api';
 import { AccuracyAnalysisData } from '../types';
 import { KPICard } from '../components/KPICard';
 import { LoadingSkeleton, ErrorState } from '../components/LoadingSkeleton';
+import { useToast } from '../components/Toast';
 
 export const AccuracyPage: React.FC = () => {
+  const { showToast } = useToast();
   const [data, setData] = useState<AccuracyAnalysisData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Interactive View Filter: 'all', 'high_wind', 'low_wind', 'peak_hours'
+  const [filterMode, setFilterMode] = useState<'all' | 'high_wind' | 'low_wind' | 'peak_hours'>('all');
 
   const loadData = async () => {
     try {
@@ -61,24 +68,42 @@ export const AccuracyPage: React.FC = () => {
   const mbe = metrics.mbe || 0;
   const isOverforecast = mbe > 0;
 
-  // Scatter plot data sample (up to 400 points for crisp performance)
-  const scatterData = matchedRecords.slice(0, 400).map((r) => ({
+  // Apply interactive filter to matchedRecords for scatter plot
+  let filteredScatter = matchedRecords;
+  if (filterMode === 'high_wind') {
+    filteredScatter = matchedRecords.filter((r) => r.actualGeneration !== null && r.actualGeneration >= 12000);
+  } else if (filterMode === 'low_wind') {
+    filteredScatter = matchedRecords.filter((r) => r.actualGeneration !== null && r.actualGeneration < 8000);
+  } else if (filterMode === 'peak_hours') {
+    filteredScatter = matchedRecords.filter((r) => {
+      const hour = parseInt(r.deliveryTimeLocal.split(' ')[1]?.split(':')[0] || '0', 10);
+      return hour >= 7 && hour <= 19;
+    });
+  }
+
+  // Scatter plot data sample
+  const scatterData = filteredScatter.slice(0, 350).map((r) => ({
     actual: r.actualGeneration,
     forecast: r.forecastGeneration,
     error: r.error,
     time: r.deliveryTimeLocal,
   }));
 
+  const handleFilterClick = (mode: 'all' | 'high_wind' | 'low_wind' | 'peak_hours', label: string) => {
+    setFilterMode(mode);
+    showToast(`Filter applied: ${label}`, 'info');
+  };
+
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-6 sm:space-y-8 animate-fadeIn">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-wind-border">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 pb-2 border-b border-wind-border">
         <div>
-          <h1 className="text-2xl font-extrabold text-wind-textPrimary tracking-tight flex items-center gap-2">
-            <Activity className="w-6 h-6 text-wind-accent" />
+          <h1 className="text-xl sm:text-2xl font-extrabold text-wind-textPrimary tracking-tight flex items-center gap-2">
+            <Activity className="w-5 sm:w-6 h-5 sm:h-6 text-wind-accent" />
             Forecast Accuracy & Performance
           </h1>
-          <p className="text-xs text-wind-textSecondary mt-1">
+          <p className="text-xs text-wind-textSecondary mt-0.5 sm:mt-1">
             Measure how reliably wind generation forecasts represent actual generation across January 2026 settlement periods.
           </p>
         </div>
@@ -86,7 +111,8 @@ export const AccuracyPage: React.FC = () => {
         <a
           href={getExportUrl('accuracy', '2026-01')}
           download="windwise_accuracy_metrics_2026-01.csv"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-wind-card hover:bg-wind-cardSecondary border border-wind-border text-xs font-semibold text-wind-textPrimary transition-all shadow-sm self-start md:self-auto"
+          onClick={() => showToast('Downloading accuracy metrics CSV...', 'info')}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-wind-card hover:bg-wind-cardSecondary border border-wind-border text-xs font-semibold text-wind-textPrimary transition-all shadow-sm self-start sm:self-auto active:scale-95"
         >
           <Download className="w-3.5 h-3.5 text-wind-accent" />
           <span>Export Metrics CSV</span>
@@ -94,10 +120,10 @@ export const AccuracyPage: React.FC = () => {
       </div>
 
       {/* TOP 5 ACCURACY KPI CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
         {/* 1. MAE */}
         <KPICard
-          title="Mean Absolute Error (MAE)"
+          title="Mean Absolute Error"
           value={metrics.mae ? Math.round(metrics.mae).toLocaleString() : '—'}
           unit="MW"
           explanation="Mean absolute magnitude of forecast deviations across matched intervals."
@@ -159,25 +185,79 @@ export const AccuracyPage: React.FC = () => {
         />
       </div>
 
+      {/* INTERACTIVE SEGMENT FILTER BAR */}
+      <div className="p-3.5 sm:p-4 rounded-2xl bg-wind-card border border-wind-border shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Filter className="w-4 h-4 text-wind-accent shrink-0" />
+          <span className="text-xs font-bold text-wind-textPrimary">Analytical Slice:</span>
+          <span className="text-[11px] text-wind-textSecondary hidden md:inline">
+            Filter scatter analysis by operational condition
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1.5 overflow-x-auto max-w-full py-0.5">
+          <button
+            onClick={() => handleFilterClick('all', 'All Matched Intervals')}
+            className={`px-3 py-1 rounded-xl text-xs font-medium transition-all shrink-0 active:scale-95 ${
+              filterMode === 'all'
+                ? 'bg-wind-cardSecondary text-wind-accent border border-wind-accent/40 shadow-sm font-semibold'
+                : 'bg-wind-sidebar border border-wind-border text-wind-textSecondary hover:text-wind-textPrimary'
+            }`}
+          >
+            All Matched (744)
+          </button>
+          <button
+            onClick={() => handleFilterClick('high_wind', 'High Wind Intervals (>=12 GW)')}
+            className={`px-3 py-1 rounded-xl text-xs font-medium transition-all shrink-0 active:scale-95 ${
+              filterMode === 'high_wind'
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm font-semibold'
+                : 'bg-wind-sidebar border border-wind-border text-wind-textSecondary hover:text-wind-textPrimary'
+            }`}
+          >
+            High Wind (&ge;12 GW)
+          </button>
+          <button
+            onClick={() => handleFilterClick('low_wind', 'Low Wind Intervals (<8 GW)')}
+            className={`px-3 py-1 rounded-xl text-xs font-medium transition-all shrink-0 active:scale-95 ${
+              filterMode === 'low_wind'
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm font-semibold'
+                : 'bg-wind-sidebar border border-wind-border text-wind-textSecondary hover:text-wind-textPrimary'
+            }`}
+          >
+            Low Wind (&lt;8 GW)
+          </button>
+          <button
+            onClick={() => handleFilterClick('peak_hours', 'Peak Demand Hours (07:00–19:00)')}
+            className={`px-3 py-1 rounded-xl text-xs font-medium transition-all shrink-0 active:scale-95 ${
+              filterMode === 'peak_hours'
+                ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-sm font-semibold'
+                : 'bg-wind-sidebar border border-wind-border text-wind-textSecondary hover:text-wind-textPrimary'
+            }`}
+          >
+            Peak Hours (07–19h)
+          </button>
+        </div>
+      </div>
+
       {/* VISUALIZATION GRID: 6 CHARTS */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* 1. Forecast vs Actual Scatter Plot with Parity Line */}
-        <div className="p-5 rounded-2xl bg-wind-card border border-wind-border shadow-card">
-          <div className="flex items-center justify-between mb-4">
+        <div className="p-4 sm:p-5 rounded-2xl bg-wind-card border border-wind-border shadow-card">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
             <div>
               <h3 className="text-sm font-bold text-wind-textPrimary">Forecast vs Actual Scatter Plot</h3>
               <p className="text-xs text-wind-textSecondary">
-                Evaluating correlation and 1:1 parity (dots on line = perfect forecast)
+                Evaluating correlation and 1:1 parity ({scatterData.length} samples shown)
               </p>
             </div>
-            <span className="text-[11px] font-mono text-wind-textSecondary bg-wind-sidebar px-2 py-0.5 rounded border border-wind-border">
+            <span className="text-[10px] sm:text-[11px] font-mono text-wind-textSecondary bg-wind-sidebar px-2 py-0.5 rounded border border-wind-border self-start sm:self-auto">
               Parity Line (y = x)
             </span>
           </div>
 
-          <div className="h-72 w-full">
+          <div className="h-64 sm:h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart margin={{ top: 10, right: 15, left: -5, bottom: 0 }}>
+              <ScatterChart margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1E2D44" />
                 <XAxis
                   type="number"
@@ -202,27 +282,27 @@ export const AccuracyPage: React.FC = () => {
                   contentStyle={{ backgroundColor: '#151F30', borderColor: '#263449', borderRadius: '10px' }}
                   formatter={(val: any, name: any) => [`${Math.round(val).toLocaleString()} MW`, name]}
                 />
-                <Scatter name="Delivery Intervals" data={scatterData} fill="#38BDF8" fillOpacity={0.6} />
+                <Scatter name="Delivery Intervals" data={scatterData} fill="#38BDF8" fillOpacity={0.65} />
               </ScatterChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* 2. Error Distribution Histogram */}
-        <div className="p-5 rounded-2xl bg-wind-card border border-wind-border shadow-card">
-          <div className="flex items-center justify-between mb-4">
+        <div className="p-4 sm:p-5 rounded-2xl bg-wind-card border border-wind-border shadow-card">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
             <div>
               <h3 className="text-sm font-bold text-wind-textPrimary">Error Distribution Histogram</h3>
               <p className="text-xs text-wind-textSecondary">
                 Frequency percentage across error intervals (Forecast - Actual MW)
               </p>
             </div>
-            <span className="text-[11px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-              Zero Error Center
+            <span className="text-[10px] sm:text-[11px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 self-start sm:self-auto">
+              Zero Center
             </span>
           </div>
 
-          <div className="h-72 w-full">
+          <div className="h-64 sm:h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={errorDistribution} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1E2D44" vertical={false} />
@@ -250,18 +330,18 @@ export const AccuracyPage: React.FC = () => {
         </div>
 
         {/* 3. Daily MAE Bar Chart */}
-        <div className="p-5 rounded-2xl bg-wind-card border border-wind-border shadow-card">
+        <div className="p-4 sm:p-5 rounded-2xl bg-wind-card border border-wind-border shadow-card">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-bold text-wind-textPrimary">Daily Mean Absolute Error (MAE)</h3>
               <p className="text-xs text-wind-textSecondary">Average daily forecast dispersion in megawatts</p>
             </div>
-            <span className="text-[11px] font-mono text-wind-textSecondary bg-wind-sidebar px-2 py-0.5 rounded border border-wind-border">
+            <span className="text-[10px] sm:text-[11px] font-mono text-wind-textSecondary bg-wind-sidebar px-2 py-0.5 rounded border border-wind-border">
               Daily MAE
             </span>
           </div>
 
-          <div className="h-72 w-full">
+          <div className="h-64 sm:h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dailyMetrics} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1E2D44" vertical={false} />
@@ -291,7 +371,7 @@ export const AccuracyPage: React.FC = () => {
         </div>
 
         {/* 4. Daily Bias Chart */}
-        <div className="p-5 rounded-2xl bg-wind-card border border-wind-border shadow-card">
+        <div className="p-4 sm:p-5 rounded-2xl bg-wind-card border border-wind-border shadow-card">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-bold text-wind-textPrimary">Daily Forecast Bias (MBE)</h3>
@@ -299,12 +379,12 @@ export const AccuracyPage: React.FC = () => {
                 Positive = Overforecast (Amber) | Negative = Underforecast (Sky Blue)
               </p>
             </div>
-            <span className="text-[11px] font-mono text-wind-textSecondary bg-wind-sidebar px-2 py-0.5 rounded border border-wind-border">
+            <span className="text-[10px] sm:text-[11px] font-mono text-wind-textSecondary bg-wind-sidebar px-2 py-0.5 rounded border border-wind-border">
               Daily Bias
             </span>
           </div>
 
-          <div className="h-72 w-full">
+          <div className="h-64 sm:h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dailyMetrics} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1E2D44" vertical={false} />
@@ -342,18 +422,18 @@ export const AccuracyPage: React.FC = () => {
         </div>
 
         {/* 5. Actual vs Forecast Generation Trajectory Comparison */}
-        <div className="p-5 rounded-2xl bg-wind-card border border-wind-border shadow-card">
+        <div className="p-4 sm:p-5 rounded-2xl bg-wind-card border border-wind-border shadow-card">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-bold text-wind-textPrimary">Daily Aggregate Volume Comparison</h3>
               <p className="text-xs text-wind-textSecondary">Total daily delivery comparison (Actual vs Forecast)</p>
             </div>
-            <span className="text-[11px] font-mono text-wind-textSecondary bg-wind-sidebar px-2 py-0.5 rounded border border-wind-border">
+            <span className="text-[10px] sm:text-[11px] font-mono text-wind-textSecondary bg-wind-sidebar px-2 py-0.5 rounded border border-wind-border">
               Aggregate MW
             </span>
           </div>
 
-          <div className="h-72 w-full">
+          <div className="h-64 sm:h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={dailyMetrics} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1E2D44" vertical={false} />
@@ -372,8 +452,8 @@ export const AccuracyPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 6. Diurnal Profile: Error magnitude by half-hourly/hourly interval */}
-        <div className="p-5 rounded-2xl bg-wind-card border border-wind-border shadow-card">
+        {/* 6. Diurnal Profile */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-wind-card border border-wind-border shadow-card">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-bold text-wind-textPrimary">Diurnal Error Profile (Hour of Day)</h3>
@@ -381,12 +461,12 @@ export const AccuracyPage: React.FC = () => {
                 Mean forecast error and MAE by clock hour (00:00 to 23:00 UK local)
               </p>
             </div>
-            <span className="text-[11px] font-mono text-wind-textSecondary bg-wind-sidebar px-2 py-0.5 rounded border border-wind-border">
+            <span className="text-[10px] sm:text-[11px] font-mono text-wind-textSecondary bg-wind-sidebar px-2 py-0.5 rounded border border-wind-border">
               24-Hour Cycle
             </span>
           </div>
 
-          <div className="h-72 w-full">
+          <div className="h-64 sm:h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={diurnalProfile} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1E2D44" vertical={false} />
@@ -407,13 +487,13 @@ export const AccuracyPage: React.FC = () => {
       </div>
 
       {/* INTERPRETATION SECTION */}
-      <div className="p-6 rounded-2xl bg-wind-card border border-wind-border shadow-card space-y-4">
+      <div className="p-4 sm:p-6 rounded-2xl bg-wind-card border border-wind-border shadow-card space-y-4">
         <div className="flex items-center gap-2">
-          <Info className="w-5 h-5 text-wind-accent" />
-          <h3 className="text-base font-bold text-wind-textPrimary">Understanding Forecast Performance</h3>
+          <Info className="w-5 h-5 text-wind-accent shrink-0" />
+          <h3 className="text-sm sm:text-base font-bold text-wind-textPrimary">Understanding Forecast Performance</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-wind-textSecondary leading-relaxed">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 text-xs text-wind-textSecondary leading-relaxed">
           <div className="p-4 rounded-xl bg-wind-cardSecondary/60 border border-wind-border/60 space-y-2">
             <div className="font-semibold text-wind-textPrimary flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-amber-400" />
@@ -460,4 +540,3 @@ export const AccuracyPage: React.FC = () => {
     </div>
   );
 };
-

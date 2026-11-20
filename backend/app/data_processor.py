@@ -16,6 +16,12 @@ def normalize_timestamp(ts: Any) -> Optional[str]:
     """
     if ts is None:
         return None
+
+    if isinstance(ts, str):
+        # Ultra-fast path for already normalized ISO UTC strings
+        if len(ts) == 20 and ts[10] == "T" and ts[19] == "Z":
+            return ts
+
     try:
         if isinstance(ts, datetime):
             dt = ts
@@ -41,6 +47,11 @@ def to_uk_local_str(ts_utc: str) -> str:
     """
     if not ts_utc:
         return ""
+
+    # Fast path for January/winter dates (UTC == GMT)
+    if isinstance(ts_utc, str) and len(ts_utc) >= 16 and (ts_utc.startswith("2026-01") or ts_utc.startswith("2025-12")):
+        return f"{ts_utc[:10]} {ts_utc[11:16]}"
+
     try:
         dt = dateutil.parser.isoparse(ts_utc)
         if dt.tzinfo is None:

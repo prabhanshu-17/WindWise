@@ -2,10 +2,12 @@ import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
-from app.config import CORS_ORIGINS
+from app.config import CORS_ORIGINS, DEFAULT_MONTH
 from app.database import init_db, get_connection
+from app.analytics import get_overview_data, get_accuracy_analysis
 from app.routers import (
     health,
     overview,
@@ -35,6 +37,15 @@ async def lifespan(app: FastAPI):
         cur_fc = conn.execute("SELECT COUNT(*) as cnt FROM forecasts")
         fc_cnt = cur_fc.fetchone()["cnt"]
         logger.info("Database status: %d actuals, %d forecasts cached", act_cnt, fc_cnt)
+
+        # Pre-warm analytics cache so the very first user request returns instantly
+        if act_cnt > 0 and fc_cnt > 0:
+            try:
+                get_overview_data(DEFAULT_MONTH)
+                get_accuracy_analysis(DEFAULT_MONTH)
+                logger.info("Analytics cache warmed up successfully")
+            except Exception as e:
+                logger.warning("Cache warmup error: %s", e)
     finally:
         conn.close()
     yield
@@ -46,6 +57,9 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+# GZip compression: Compresses JSON payloads by 90%+ for fast transfer
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # CORS Middleware
 app.add_middleware(
@@ -95,4 +109,3 @@ def root():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
-

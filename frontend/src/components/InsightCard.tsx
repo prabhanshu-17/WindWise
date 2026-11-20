@@ -10,17 +10,17 @@ export const InsightCard: React.FC<InsightCardProps> = ({ insight }) => {
   const getIcon = () => {
     switch (insight.type) {
       case 'highest_error':
-        return <AlertTriangle className="w-4 h-4 text-rose-400" />;
+        return <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />;
       case 'max_wind':
-        return <TrendingUp className="w-4 h-4 text-emerald-400" />;
+        return <TrendingUp className="w-4 h-4 text-emerald-400 shrink-0" />;
       case 'min_wind':
-        return <TrendingDown className="w-4 h-4 text-sky-400" />;
+        return <TrendingDown className="w-4 h-4 text-sky-400 shrink-0" />;
       case 'bias':
-        return <Wind className="w-4 h-4 text-amber-400" />;
+        return <Wind className="w-4 h-4 text-amber-400 shrink-0" />;
       case 'freshness':
       case 'coverage':
       default:
-        return <CheckCircle2 className="w-4 h-4 text-emerald-400" />;
+        return <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />;
     }
   };
 
@@ -39,13 +39,13 @@ export const InsightCard: React.FC<InsightCardProps> = ({ insight }) => {
   };
 
   return (
-    <div className={`p-4 rounded-xl bg-wind-card border border-wind-border ${getBorderColor()} shadow-sm hover:border-wind-borderLight transition-all`}>
-      <div className="flex items-start justify-between gap-3 mb-2">
+    <div className={`p-3.5 sm:p-4 rounded-xl bg-wind-card border border-wind-border ${getBorderColor()} shadow-sm hover:border-wind-borderLight transition-all`}>
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
         <div className="flex items-center gap-2">
           {getIcon()}
-          <h4 className="text-sm font-semibold text-wind-textPrimary">{insight.title}</h4>
+          <h4 className="text-xs sm:text-sm font-semibold text-wind-textPrimary">{insight.title}</h4>
         </div>
-        <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-wind-cardSecondary border border-wind-border text-wind-textPrimary">
+        <span className="text-[11px] sm:text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-wind-cardSecondary border border-wind-border text-wind-textPrimary">
           {insight.metricValue}
         </span>
       </div>
@@ -55,4 +55,3 @@ export const InsightCard: React.FC<InsightCardProps> = ({ insight }) => {
     </div>
   );
 };
-

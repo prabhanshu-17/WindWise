@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   BookOpen,
   Database,
@@ -8,34 +8,121 @@ import {
   Layers,
   ArrowRight,
   CheckCircle2,
-  Lock
+  Lock,
+  Sparkles,
+  HelpCircle
 } from 'lucide-react';
 
 export const MethodologyPage: React.FC = () => {
+  // Interactive Formula Calculator State
+  const [calcForecast, setCalcForecast] = useState<number>(14500);
+  const [calcActual, setCalcActual] = useState<number>(12800);
+
+  const calcError = calcForecast - calcActual;
+  const calcAbsError = Math.abs(calcError);
+  const calcPct = calcActual > 0 ? ((calcError / calcActual) * 100).toFixed(1) : '—';
+  const isOver = calcError > 0;
+
   return (
-    <div className="space-y-8 max-w-5xl animate-fadeIn">
+    <div className="space-y-6 sm:space-y-8 max-w-5xl animate-fadeIn">
       {/* Page Header */}
       <div className="pb-2 border-b border-wind-border">
-        <h1 className="text-2xl font-extrabold text-wind-textPrimary tracking-tight flex items-center gap-2">
-          <BookOpen className="w-6 h-6 text-wind-accent" />
+        <h1 className="text-xl sm:text-2xl font-extrabold text-wind-textPrimary tracking-tight flex items-center gap-2">
+          <BookOpen className="w-5 sm:w-6 h-5 sm:h-6 text-wind-accent" />
           Methodology & Data Transparency
         </h1>
-        <p className="text-xs text-wind-textSecondary mt-1">
+        <p className="text-xs text-wind-textSecondary mt-0.5 sm:mt-1">
           Technical specifications, data integrity protocols, mathematical definitions, and architectural limitations.
         </p>
       </div>
 
+      {/* INTERACTIVE FORMULA PLAYGROUND */}
+      <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-wind-card via-wind-cardSecondary to-wind-sidebar border border-wind-accent/30 shadow-card space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-wind-accent" />
+            <h2 className="text-sm sm:text-base font-bold text-wind-textPrimary">
+              Interactive Metric Calculator
+            </h2>
+          </div>
+          <span className="text-[10px] sm:text-[11px] font-mono text-wind-accent bg-wind-accent/15 px-2.5 py-0.5 rounded-full border border-wind-accent/30 self-start sm:self-auto font-semibold">
+            Live Formula Tester
+          </span>
+        </div>
+        <p className="text-xs text-wind-textSecondary">
+          Test how forecast errors, absolute errors, and bias directions are calculated in real time.
+        </p>
+
+        {/* Inputs & Results Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+          {/* Input 1: Forecast */}
+          <div className="p-3 rounded-xl bg-wind-sidebar border border-wind-border space-y-1">
+            <label className="text-[10px] font-semibold uppercase text-wind-textSecondary">
+              Forecast Generation (MW)
+            </label>
+            <input
+              type="number"
+              value={calcForecast}
+              onChange={(e) => setCalcForecast(Number(e.target.value) || 0)}
+              className="w-full bg-transparent font-mono font-bold text-sky-400 text-base focus:outline-none"
+            />
+          </div>
+
+          {/* Input 2: Actual */}
+          <div className="p-3 rounded-xl bg-wind-sidebar border border-wind-border space-y-1">
+            <label className="text-[10px] font-semibold uppercase text-wind-textSecondary">
+              Actual Generation (MW)
+            </label>
+            <input
+              type="number"
+              value={calcActual}
+              onChange={(e) => setCalcActual(Number(e.target.value) || 0)}
+              className="w-full bg-transparent font-mono font-bold text-emerald-400 text-base focus:outline-none"
+            />
+          </div>
+
+          {/* Result 1: Error */}
+          <div className="p-3 rounded-xl bg-wind-sidebar border border-wind-border space-y-1">
+            <span className="text-[10px] font-semibold uppercase text-wind-textSecondary">
+              Raw Error (Forecast - Actual)
+            </span>
+            <div className={`font-mono font-bold text-base ${isOver ? 'text-amber-400' : 'text-sky-400'}`}>
+              {calcError > 0 ? `+${calcError.toLocaleString()}` : calcError.toLocaleString()} MW
+            </div>
+          </div>
+
+          {/* Result 2: Absolute Error */}
+          <div className="p-3 rounded-xl bg-wind-sidebar border border-wind-border space-y-1">
+            <span className="text-[10px] font-semibold uppercase text-wind-textSecondary">
+              Absolute Error (|e|)
+            </span>
+            <div className="font-mono font-bold text-base text-wind-accent">
+              {calcAbsError.toLocaleString()} MW ({calcPct}%)
+            </div>
+          </div>
+        </div>
+
+        <div className="text-[11px] p-2.5 rounded-lg bg-wind-card/80 border border-wind-border text-wind-textSecondary flex items-center gap-2">
+          <HelpCircle className="w-3.5 h-3.5 text-wind-accent shrink-0" />
+          <span>
+            {isOver
+              ? 'Result: Overforecasting by ' + calcError.toLocaleString() + ' MW. Day-ahead desk risks under-procuring conventional backup.'
+              : 'Result: Underforecasting by ' + Math.abs(calcError).toLocaleString() + ' MW. Day-ahead desk risks surplus power spill.'}
+          </span>
+        </div>
+      </div>
+
       {/* SECTION 1: DATA SOURCES */}
-      <div className="p-6 rounded-2xl bg-wind-card border border-wind-border shadow-card space-y-4">
+      <div className="p-4 sm:p-6 rounded-2xl bg-wind-card border border-wind-border shadow-card space-y-4">
         <div className="flex items-center gap-2">
-          <Database className="w-5 h-5 text-wind-accent" />
-          <h2 className="text-base font-bold text-wind-textPrimary">1. Elexon BMRS Data Sources</h2>
+          <Database className="w-5 h-5 text-wind-accent shrink-0" />
+          <h2 className="text-sm sm:text-base font-bold text-wind-textPrimary">1. Elexon BMRS Data Sources</h2>
         </div>
         <p className="text-xs text-wind-textSecondary leading-relaxed">
           In strict compliance with project specifications, WINDWISE utilizes exclusively two verified primary data feeds from Elexon BMRS (Balancing Mechanism Reporting Service), with no external third-party generation, market pricing, thermal, or weather feeds:
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4 pt-1">
           <div className="p-4 rounded-xl bg-wind-cardSecondary/60 border border-wind-border/60 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-wind-accent">Actual Outturn Generation</span>
@@ -46,7 +133,7 @@ export const MethodologyPage: React.FC = () => {
             <p className="text-xs text-wind-textSecondary leading-relaxed">
               Provides half-hourly generation by fuel type across Great Britain. Filtered strictly where <code className="text-wind-accent font-mono bg-wind-sidebar px-1 py-0.5 rounded">fuelType == 'WIND'</code>. Records provide outturn megawatt (MW) delivery per settlement interval.
             </p>
-            <div className="text-[10px] text-wind-textSecondary/70 font-mono">
+            <div className="text-[10px] text-wind-textSecondary/70 font-mono truncate">
               Endpoint: /datasets/FUELHH/stream
             </div>
           </div>
@@ -61,7 +148,7 @@ export const MethodologyPage: React.FC = () => {
             <p className="text-xs text-wind-textSecondary leading-relaxed">
               Provides National Grid ESO wind power forecast runs published at multiple vintages prior to delivery. Each record specifies delivery interval (<code className="text-wind-accentBlue font-mono bg-wind-sidebar px-1 py-0.5 rounded">startTime</code>), publication timestamp (<code className="text-wind-accentBlue font-mono bg-wind-sidebar px-1 py-0.5 rounded">publishTime</code>), and forecasted MW.
             </p>
-            <div className="text-[10px] text-wind-textSecondary/70 font-mono">
+            <div className="text-[10px] text-wind-textSecondary/70 font-mono truncate">
               Endpoint: /datasets/WINDFOR/stream
             </div>
           </div>
@@ -69,10 +156,10 @@ export const MethodologyPage: React.FC = () => {
       </div>
 
       {/* SECTION 2: TIME RESOLUTION & EVALUATION PERIOD */}
-      <div className="p-6 rounded-2xl bg-wind-card border border-wind-border shadow-card space-y-4">
+      <div className="p-4 sm:p-6 rounded-2xl bg-wind-card border border-wind-border shadow-card space-y-4">
         <div className="flex items-center gap-2">
-          <Clock className="w-5 h-5 text-wind-accentBlue" />
-          <h2 className="text-base font-bold text-wind-textPrimary">2. Time Resolution & January 2026 Horizon</h2>
+          <Clock className="w-5 h-5 text-wind-accentBlue shrink-0" />
+          <h2 className="text-sm sm:text-base font-bold text-wind-textPrimary">2. Time Resolution & January 2026 Horizon</h2>
         </div>
         <p className="text-xs text-wind-textSecondary leading-relaxed">
           The evaluation period strictly covers <span className="text-wind-textPrimary font-semibold">January 1–31, 2026</span> (31 delivery days).
@@ -82,11 +169,11 @@ export const MethodologyPage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="p-3 rounded-lg bg-wind-card border border-wind-border/60">
               <span className="font-semibold text-wind-textPrimary block mb-1">Settlement Intervals (FUELHH)</span>
-              48 half-hourly settlement periods per day × 31 days = <span className="font-mono text-wind-accent font-bold">1,488 half-hour settlement periods</span>.
+              48 half-hourly settlement periods per day &times; 31 days = <span className="font-mono text-wind-accent font-bold">1,488 half-hour settlement periods</span>.
             </div>
             <div className="p-3 rounded-lg bg-wind-card border border-wind-border/60">
               <span className="font-semibold text-wind-textPrimary block mb-1">Forecast Intervals (WINDFOR)</span>
-              24 hourly intervals per day (:00 timestamps) × 31 days = <span className="font-mono text-sky-400 font-bold">744 hourly forecast intervals</span>.
+              24 hourly intervals per day (:00 timestamps) &times; 31 days = <span className="font-mono text-sky-400 font-bold">744 hourly forecast intervals</span>.
             </div>
           </div>
           <p>
@@ -97,16 +184,16 @@ export const MethodologyPage: React.FC = () => {
       </div>
 
       {/* SECTION 3: FORECAST SELECTION & LOOK-AHEAD BIAS PREVENTION */}
-      <div className="p-6 rounded-2xl bg-wind-card border border-wind-border shadow-card space-y-4">
+      <div className="p-4 sm:p-6 rounded-2xl bg-wind-card border border-wind-border shadow-card space-y-4">
         <div className="flex items-center gap-2">
-          <Lock className="w-5 h-5 text-amber-400" />
-          <h2 className="text-base font-bold text-wind-textPrimary">3. Forecast Selection & Look-Ahead Bias Prevention</h2>
+          <Lock className="w-5 h-5 text-amber-400 shrink-0" />
+          <h2 className="text-sm sm:text-base font-bold text-wind-textPrimary">3. Forecast Selection & Look-Ahead Bias Prevention</h2>
         </div>
         <p className="text-xs text-wind-textSecondary leading-relaxed">
           Energy procurement decisions in the UK Day-Ahead wholesale market occur under strict temporal boundaries (e.g., 10:00 UK local time on D-1 for the EPEX SPOT / Nord Pool auction gate closure). To prevent analytical look-ahead bias, forecast selection strictly adheres to the following algorithm:
         </p>
 
-        <div className="p-4 rounded-xl bg-wind-sidebar border border-wind-border font-mono text-xs text-wind-textPrimary space-y-2">
+        <div className="p-4 rounded-xl bg-wind-sidebar border border-wind-border font-mono text-xs text-wind-textPrimary space-y-2 overflow-x-auto">
           <p className="text-wind-accent font-semibold">// Forecast Selection Rule for Delivery Interval (T_delivery) and Cutoff (T_cutoff):</p>
           <p>1. Identify all forecast records where: <span className="text-sky-400">startTime == T_delivery</span></p>
           <p>2. Filter candidate forecasts where: <span className="text-amber-400">publishTime &lt;= T_cutoff</span></p>
@@ -120,17 +207,17 @@ export const MethodologyPage: React.FC = () => {
         </p>
       </div>
 
-      {/* SECTION 4: MATHEMATICAL ACCURACY FORMULAS */}
-      <div className="p-6 rounded-2xl bg-wind-card border border-wind-border shadow-card space-y-4">
+      {/* SECTION 4: STATISTICAL ACCURACY FORMULAS */}
+      <div className="p-4 sm:p-6 rounded-2xl bg-wind-card border border-wind-border shadow-card space-y-4">
         <div className="flex items-center gap-2">
-          <Calculator className="w-5 h-5 text-wind-accent" />
-          <h2 className="text-base font-bold text-wind-textPrimary">4. Statistical Accuracy Formulas</h2>
+          <Calculator className="w-5 h-5 text-wind-accent shrink-0" />
+          <h2 className="text-sm sm:text-base font-bold text-wind-textPrimary">4. Statistical Accuracy Formulas</h2>
         </div>
         <p className="text-xs text-wind-textSecondary leading-relaxed">
-          All performance metrics are calculated strictly over matched intervals where both valid actual generation and eligible forecasts co-exist. Missing intervals are excluded and never silently coerced to zero:
+          All performance metrics are calculated strictly over matched intervals where both valid actual generation and eligible forecasts co-exist:
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 text-xs">
           <div className="p-4 rounded-xl bg-wind-cardSecondary/60 border border-wind-border/60 space-y-1.5">
             <span className="font-bold text-wind-textPrimary">Forecast Error & Absolute Error</span>
             <div className="font-mono text-wind-accent bg-wind-sidebar p-2 rounded border border-wind-border">
@@ -145,7 +232,7 @@ export const MethodologyPage: React.FC = () => {
           <div className="p-4 rounded-xl bg-wind-cardSecondary/60 border border-wind-border/60 space-y-1.5">
             <span className="font-bold text-wind-textPrimary">Mean Absolute Error (MAE)</span>
             <div className="font-mono text-wind-accent bg-wind-sidebar p-2 rounded border border-wind-border">
-              MAE = (1 / N) * Σ |Forecast_i - Actual_i|
+              MAE = (1 / N) * &Sigma; |Forecast_i - Actual_i|
             </div>
             <p className="text-wind-textSecondary text-[11px]">
               Average dispersion in megawatts without directional bias.
@@ -155,7 +242,7 @@ export const MethodologyPage: React.FC = () => {
           <div className="p-4 rounded-xl bg-wind-cardSecondary/60 border border-wind-border/60 space-y-1.5">
             <span className="font-bold text-wind-textPrimary">Root Mean Squared Error (RMSE)</span>
             <div className="font-mono text-wind-accent bg-wind-sidebar p-2 rounded border border-wind-border">
-              RMSE = sqrt((1 / N) * Σ (Forecast_i - Actual_i)^2)
+              RMSE = sqrt((1 / N) * &Sigma; (Forecast_i - Actual_i)^2)
             </div>
             <p className="text-wind-textSecondary text-[11px]">
               Quadratic scoring that heavily penalizes large ramp discrepancies.
@@ -165,7 +252,7 @@ export const MethodologyPage: React.FC = () => {
           <div className="p-4 rounded-xl bg-wind-cardSecondary/60 border border-wind-border/60 space-y-1.5">
             <span className="font-bold text-wind-textPrimary">Mean Bias Error (MBE)</span>
             <div className="font-mono text-wind-accent bg-wind-sidebar p-2 rounded border border-wind-border">
-              MBE = (1 / N) * Σ (Forecast_i - Actual_i)
+              MBE = (1 / N) * &Sigma; (Forecast_i - Actual_i)
             </div>
             <p className="text-wind-textSecondary text-[11px]">
               Direct indicator of systemic overforecasting (&gt;0) or underforecasting (&lt;0).
@@ -175,10 +262,10 @@ export const MethodologyPage: React.FC = () => {
           <div className="p-4 rounded-xl bg-wind-cardSecondary/60 border border-wind-border/60 space-y-1.5">
             <span className="font-bold text-wind-textPrimary">Weighted Absolute Percentage Error (WAPE)</span>
             <div className="font-mono text-wind-accent bg-wind-sidebar p-2 rounded border border-wind-border">
-              WAPE = (Σ |e_i| / Σ Actual_i) * 100
+              WAPE = (&Sigma; |e_i| / &Sigma; Actual_i) * 100
             </div>
             <p className="text-wind-textSecondary text-[11px]">
-              Preferred over MAPE to prevent mathematical division-by-zero during low wind periods.
+              Preferred over MAPE to prevent division-by-zero during low wind periods.
             </p>
           </div>
 
@@ -195,16 +282,16 @@ export const MethodologyPage: React.FC = () => {
       </div>
 
       {/* SECTION 5: DATA LIMITATIONS & WHOLESALE RISK CONTEXT */}
-      <div className="p-6 rounded-2xl bg-wind-card border border-wind-border shadow-card space-y-4">
+      <div className="p-4 sm:p-6 rounded-2xl bg-wind-card border border-wind-border shadow-card space-y-4">
         <div className="flex items-center gap-2">
-          <ShieldAlert className="w-5 h-5 text-amber-400" />
-          <h2 className="text-base font-bold text-wind-textPrimary">5. Operational Limitations & Scope Restrictions</h2>
+          <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />
+          <h2 className="text-sm sm:text-base font-bold text-wind-textPrimary">5. Operational Limitations & Scope Restrictions</h2>
         </div>
         <p className="text-xs text-wind-textSecondary leading-relaxed">
           WINDWISE is intentionally focused on renewable forecast intelligence derived from National Grid ESO operational data. In adherence with project boundary conditions:
         </p>
 
-        <ul className="space-y-2 text-xs text-wind-textSecondary">
+        <ul className="space-y-2.5 text-xs text-wind-textSecondary">
           <li className="flex items-start gap-2">
             <CheckCircle2 className="w-4 h-4 text-wind-accent mt-0.5 shrink-0" />
             <span><strong className="text-wind-textPrimary">National Wind Generation Only: </strong>Aggregates national transmission-connected wind farms; does not include embedded solar or local micro-generation.</span>
@@ -226,4 +313,3 @@ export const MethodologyPage: React.FC = () => {
     </div>
   );
 };
-
